@@ -396,10 +396,9 @@ void setup() {
   pinMode(beeperPin, OUTPUT);
   pinMode(resetButtonPin, INPUT_PULLUP);
 
-  pinMode(senseoButtonsInputPin, INPUT);
-
   if (CupDetectorAvailableSetting.get()) {
-    pinMode(cupDetectorPin, INPUT_PULLUP);    
+    pinMode(cupDetectorPin, INPUT_PULLUP); 
+    pinMode(cupDetectorAnalogPin, INPUT);   
   }
 
   /**

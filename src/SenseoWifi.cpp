@@ -30,7 +30,7 @@ HomieSetting<bool> PublishHomeAssistantDiscoveryConfig("homeassistantautodiscove
 /**
 * Called by the LED changed interrupt
 */
-void ICACHE_RAM_ATTR ledChangedHandler() {
+void IRAM_ATTR ledChangedHandler() {
   mySenseoLed.pinStateToggled();
 }
 
@@ -396,9 +396,10 @@ void setup() {
   pinMode(beeperPin, OUTPUT);
   pinMode(resetButtonPin, INPUT_PULLUP);
 
+  pinMode(senseoButtonsInputPin, INPUT);
+
   if (CupDetectorAvailableSetting.get()) {
-    pinMode(cupDetectorPin, INPUT_PULLUP);
-    pinMode(cupDetectorAnalogPin, INPUT);
+    pinMode(cupDetectorPin, INPUT_PULLUP);    
   }
 
   /**
@@ -413,7 +414,7 @@ void setup() {
   /**
   * Homie specific settings
   */
-  Homie_setFirmware("senseo-wifi", "1.8.1");
+  Homie_setFirmware("senseo-wifi", "1.9");
   Homie_setBrand("SenseoWifi");
   //Homie.disableResetTrigger();
   Homie.disableLedFeedback();

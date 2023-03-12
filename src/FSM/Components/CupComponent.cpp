@@ -1,18 +1,22 @@
 /*
-Cup.cpp - Library for the SenseoWifi project.
+CupComponent.cpp - Library for the SenseoWifi project.
 Created by Thomas Dietrich, 2016-03-05.
 Released under some license.
 */
 
-#include "Cup.h"
+#include "CupComponent.h"
 
-Cup::Cup(int pin)
+#include "Homie.h"
+#include "constants.h"
+
+
+CupComponent::CupComponent(int pin)
 {
   detectorPin = pin;
   cupAvailable = !digitalRead(detectorPin);
 }
 
-void Cup::updateState() {
+void CupComponent::update() {
   bool value = !digitalRead(detectorPin);
   //debounce
   if (value != lastChangeValue) {
@@ -32,18 +36,18 @@ void Cup::updateState() {
   }
 }
 
-void Cup::setFilling() {
+void CupComponent::setFilling() {
   cupFilling = true;
   cupFull = false;
 }
 
-void Cup::setFull() {
+void CupComponent::setFull() {
   cupFilling = false;
   cupFull = true;
   fullChanged = true;
 }
 
-bool Cup::isAvailableChanged() {
+bool CupComponent::isAvailableChanged() {
   if (availableChanged) {
     availableChanged = false;
     return true;
@@ -51,7 +55,7 @@ bool Cup::isAvailableChanged() {
   return false;
 }
 
-bool Cup::isFullChanged() {
+bool CupComponent::isFullChanged() {
   if (fullChanged) {
     fullChanged = false;
     return true;
@@ -59,22 +63,22 @@ bool Cup::isFullChanged() {
   return false;
 }
 
-bool Cup::isAvailable() {
+bool CupComponent::isAvailable() {
   return cupAvailable;
 }
 
-bool Cup::isNotAvailable() {
+bool CupComponent::isNotAvailable() {
   return !cupAvailable;
 }
 
-bool Cup::isFilling() {
+bool CupComponent::isFilling() {
   return cupFilling;
 }
 
-bool Cup::isFull() {
+bool CupComponent::isFull() {
   return cupFull;
 }
 
-bool Cup::isEmpty() {
+bool CupComponent::isEmpty() {
   return !cupFull;
 }

@@ -5,9 +5,20 @@
 #include "ReadyState.h"
 #include "OffState.h"
 #include "constants.h"
+#include "Fsm/Components/CupComponent.h"
 
 void BrewingState::onEnter(FsmClassId previousState) {
-
+    CupComponent * cupComponent = getComponent<CupComponent>();
+    if (cupComponent != nullptr) {
+        if (cupComponent->isAvailable()) {
+            cupComponent->setFilling();
+        }
+        else {
+            senseoNode.setProperty("debug").send("cup: Brewing without detected cup, will not report the filling->full process.");
+        }
+    }
+    senseoNode.setProperty("brew").send("true");
+    senseoNode.setProperty("brewedSize").send("0");
 }
 void BrewingState::onUpdate() {
     ledStateEnum ledState = senseoLed.getState();
@@ -18,16 +29,16 @@ void BrewingState::onUpdate() {
 }
 
 void BrewingState::onExit(FsmClassId nextState) {
-    /*senseoNode.setProperty("brew").send("false");
+    senseoNode.setProperty("brew").send("false");
     // Determine brewed cup size based on time in brewing state
-    int brewedSeconds = mySenseoSM.getSecondsInLastState();
+    int brewedSeconds = (getTimeInState()+ 500) / 1000;
     int brewedSize = 0;
 
     if (brewedSeconds > 10) {
         // 0---------------------|-----+-----|-----+-----|-------100
         int tolerance = (BrewHeat2CupSeconds - BrewHeat1CupSeconds) / 2;
 
-        if (mySenseoSM.getState() == SENSEO_READY) {
+        if (nextState == ReadyState::getClassId()) {
             if (abs(brewedSeconds - BrewHeat1CupSeconds) < tolerance) {
                 brewedSize = 1;
             }
@@ -37,7 +48,7 @@ void BrewingState::onExit(FsmClassId nextState) {
         }
 
         tolerance = (Brew2CupSeconds - Brew1CupSeconds) / 2;
-        if (mySenseoSM.getState() == SENSEO_NOWATER || mySenseoSM.getState() == SENSEO_OFF) {
+        if (nextState == NoWaterState::getClassId() || nextState == OffState::getClassId()) {
             if (abs(brewedSeconds - Brew1CupSeconds) < tolerance) {
                 brewedSize = 1;
             }
@@ -50,6 +61,9 @@ void BrewingState::onExit(FsmClassId nextState) {
         if (brewedSize == 0) {
             senseoNode.setProperty("debug").send("brew: Unexpected time in SENSEO_BREWING state. Please adapt timings.");
         }
-        if (CupDetectorAvailableSetting.get() && myCup.isFilling()) myCup.setFull();        
-    }*/
+        CupComponent * cupComponent = getComponent<CupComponent>();
+        if (cupComponent != nullptr) {
+            if (cupComponent->isFilling()) cupComponent->setFull();
+        }        
+    }
 }

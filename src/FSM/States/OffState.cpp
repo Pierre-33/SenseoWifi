@@ -5,6 +5,11 @@
 #include "ReadyState.h"
 #include "FSM/Components/BuzzerComponent.h"
 
+void OffState::onEnter(FsmClassId previousState) {
+    senseoNode.setProperty("brewedSize").send("0");
+    senseoNode.setProperty("power").send("false");
+}
+
 void OffState::onUpdate() {
     ledStateEnum ledState = senseoLed.getState();
 

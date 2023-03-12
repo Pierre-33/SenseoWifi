@@ -3,17 +3,15 @@
   Created by Thomas Dietrich, 2016-03-05.
   Released under some license.
 */
-#ifndef Cup_h
-#define Cup_h
+#pragma once
 
-#include "Homie.h"
-#include "constants.h"
+#include "FSM/FsmComponent.h"
 
-class Cup
+class CupComponent : public  FsmComponent<CupComponent>
 {
   public:
-    Cup(int pin);
-    void updateState();
+    CupComponent(int pin);
+    void update();
     void setFilling();
     void setFull();
     bool isAvailableChanged();
@@ -33,5 +31,3 @@ class Cup
     bool cupFilling = false;
     bool cupFull = false;
 };
-
-#endif

@@ -4,6 +4,12 @@
 #include "HeatingState.h"
 #include "ReadyState.h"
 #include "OffState.h"
+#include "FSM/Components/BuzzerComponent.h"
+
+void NoWaterState::onEnter(FsmClassId previousState) {
+    EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,buzz("melody2"));
+    senseoNode.setProperty("outOfWater").send("true");
+}
 
 void NoWaterState::onUpdate() {
     ledStateEnum ledState = senseoLed.getState();

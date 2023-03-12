@@ -9,16 +9,16 @@ Released under some license.
 #include "SenseoLed.h"
 #include "SenseoSM.h"
 #include "SenseoControl.h"
-#include "Cup.h"
 #include "pins.h"
 #include "constants.h"
 #include "testIO.cpp"
 #include "HomeAssistant.h"
-#include <ezBuzzer.h>
+//#include <ezBuzzer.h>
 #include "FSM/FsmWithComponents.h"
 #include "FSM/Components/SenseoLedControl.h"
 #include "FSM/Components/SenseoInputButtons.h"
 #include "FSM/Components/BuzzerComponent.h"
+#include "FSM/Components/CupComponent.h"
 #include "FSM/States/BrewingState.h"
 #include "FSM/States/HeatingState.h"
 #include "FSM/States/NoWaterState.h"
@@ -30,8 +30,8 @@ FsmWithComponents senseoFsm;
 SenseoLed mySenseoLed(ocSenseLedPin);
 SenseoSM mySenseoSM;
 SenseoControl myControl(ocPressPowerPin, ocPressLeftPin, ocPressRightPin);
-Cup myCup(cupDetectorPin);
-ezBuzzer myBuzzer(beeperPin);
+//Cup myCup(cupDetectorPin);
+//ezBuzzer myBuzzer(beeperPin);
 
 HomieNode senseoNode("machine", "senseo-wifi", "senseo-wifi");
 HomieSetting<bool> CupDetectorAvailableSetting("cupdetector", "Enable cup detection (TCRT5000)");
@@ -82,8 +82,10 @@ bool brewHandler(const HomieRange& range, const String& value) {
     return false;
   }
 
-  if (CupDetectorAvailableSetting.get()) {
-    if (myCup.isNotAvailable() || myCup.isFull()) {
+  //TODO: move that in the FSM once I implemented a command patern
+  CupComponent * cupComponent = senseoFsm.getComponent<CupComponent>();
+  if (cupComponent != nullptr) {
+    if (cupComponent->isNotAvailable() || cupComponent->isFull()) {
       senseoNode.setProperty("debug").send("brew: no or full cup present. Not executing.");
       return false;
     }
@@ -95,7 +97,7 @@ bool brewHandler(const HomieRange& range, const String& value) {
   return true;
 }
 
-void buzz(const String &value) {
+/*void buzz(const String &value) {
   if (value == "tone1") tone(beeperPin, 4096, 300);
   if (value == "tone2") tone(beeperPin, 2048, 300);
   if (value == "tone3") tone(beeperPin, 1536, 300);
@@ -115,29 +117,24 @@ void buzz(const String &value) {
     static int noteDurations3[] = { 4, 8 };
     myBuzzer.playMelody(melody3, noteDurations3, sizeof(noteDurations3) / sizeof(int));
   }
-}
+}*/
 
 /**
 * Called by Homie upon an MQTT message to '.../buzzer'.
 */
 bool buzzerHandler(const HomieRange& range, const String& value) {
-  /**
-  * Catch incorrect messages
-  */
-  if (value != "tone1" && value !="tone2" && value !="tone3" && value !="tone4" && value !="melody1" && value !="melody2" && value !="melody3") {
-    senseoNode.setProperty("debug").send("buzzer: malformed message content. Allowed: [tone1,tone2,tone3,tone4,melody1,melody2,melody3].");
-    return false;
+  BuzzerComponent * buzzerComponent = senseoFsm.getComponent<BuzzerComponent>();
+  if (buzzerComponent != nullptr) {
+    senseoNode.setProperty("buzzer").send(value);
+    bool success = buzzerComponent->buzz(value);
+    if (!success) senseoNode.setProperty("debug").send("buzzer: malformed message content. Allowed: [melody1,melody2,melody3].");
+    senseoNode.setProperty("buzzer").send("");
+    return success;
   }
-
-  if (!BuzzerSetting.get()) {
+  else {
     senseoNode.setProperty("debug").send("buzzer: not configured.");
     return false;
   }
-
-  senseoNode.setProperty("buzzer").send(value);
-  buzz(value);  
-  senseoNode.setProperty("buzzer").send("");
-  return true;
 }
 
 /**
@@ -149,73 +146,12 @@ void senseoStateExitAction() {
     + String(" to ") + String(mySenseoSM.getStateAsString())
     + String(" after ") + String(mySenseoSM.getSecondsInLastState()) + String(" seconds")
   );
-  switch (mySenseoSM.getStatePrev()) {
-    case SENSEO_OFF: {
-      if (BuzzerSetting.get()) buzz("melody3");
-      senseoNode.setProperty("power").send("true");
-      senseoNode.setProperty("outOfWater").send("false");
-      senseoNode.setProperty("brew").send("false");
-      break;
-    }
-    case SENSEO_HEATING: {
-      break;
-    }
-    case SENSEO_READY: {
-      break;
-    }
-    case SENSEO_BREWING: {
-      senseoNode.setProperty("brew").send("false");
-      // Determine brewed cup size based on time in brewing state
-      int brewedSeconds = mySenseoSM.getSecondsInLastState();
-      int brewedSize = 0;
-
-      if (brewedSeconds <= 10) break;
-
-      // 0---------------------|-----+-----|-----+-----|-------100
-      int tolerance = (BrewHeat2CupSeconds - BrewHeat1CupSeconds) / 2;
-
-      if (mySenseoSM.getState() == SENSEO_READY) {
-        if (abs(brewedSeconds - BrewHeat1CupSeconds) < tolerance) {
-          brewedSize = 1;
-        }
-        else if (abs(brewedSeconds - BrewHeat2CupSeconds) < tolerance) {
-          brewedSize = 2;
-        }
-      }
-
-      tolerance = (Brew2CupSeconds - Brew1CupSeconds) / 2;
-      if (mySenseoSM.getState() == SENSEO_NOWATER || mySenseoSM.getState() == SENSEO_OFF) {
-        if (abs(brewedSeconds - Brew1CupSeconds) < tolerance) {
-          brewedSize = 1;
-        }
-        else if (abs(brewedSeconds - Brew2CupSeconds) < tolerance) {
-          brewedSize = 2;
-        }
-      }
-
-      senseoNode.setProperty("brewedSize").send(String(brewedSize));
-      if (brewedSize == 0) {
-        senseoNode.setProperty("debug").send("brew: Unexpected time in SENSEO_BREWING state. Please adapt timings.");
-      }
-      if (CupDetectorAvailableSetting.get() && myCup.isFilling()) myCup.setFull();
-      break;
-    }
-    case SENSEO_NOWATER: {
-      if (mySenseoSM.getState() != SENSEO_OFF) {
-        senseoNode.setProperty("outOfWater").send("false");
-      }
-      break;
-    }
-    case SENSEO_unknown: {
-      break;
-    }
-  }
 }
 
 /**
 * Senseo state machine, transition reaction: entry actions
 */
-void senseoStateEntryAction() {
+/*void senseoStateEntryAction() {
   switch (mySenseoSM.getState()) {
     case SENSEO_OFF: {
       senseoNode.setProperty("brewedSize").send("0");
@@ -251,7 +187,7 @@ void senseoStateEntryAction() {
       break;
     }
   }
-}
+}*/
 
 void publishHomeAssistandDiscoveryConfig()
 {
@@ -331,9 +267,10 @@ void setupHandler() {
   // configuring the state machine
   //senseoFsm.addComponent(std::make_unique<SenseoCommands>());
   //senseoFsm.addComponent(std::make_unique<SenseoControl>(ocPressPowerPin, ocPressLeftPin, ocPressRightPin));
-  senseoFsm.addComponent(std::make_unique<SenseoInputButtons>(senseoButtonsInputPin));
+  //senseoFsm.addComponent(std::make_unique<SenseoInputButtons>(senseoButtonsInputPin));
   senseoFsm.addComponent(std::make_unique<SenseoLedControl>(senseoLedOutPin));
   if (BuzzerSetting.get()) senseoFsm.addComponent(std::make_unique<BuzzerComponent>(beeperPin));
+  if (CupDetectorAvailableSetting.get()) senseoFsm.addComponent(std::make_unique<CupComponent>(cupDetectorPin));
 
   senseoFsm.addState(std::make_unique<BrewingState>(mySenseoLed,senseoNode));
   senseoFsm.addState(std::make_unique<HeatingState>(mySenseoLed));
@@ -345,7 +282,7 @@ void setupHandler() {
   senseoFsm.setInitialState<UnknownState>();
 
   //configuring the button handler
-  SenseoInputButtons * inputButtons = senseoFsm.getComponent<SenseoInputButtons>();
+  /*SenseoInputButtons * inputButtons = senseoFsm.getComponent<SenseoInputButtons>();
   if (inputButtons != nullptr) {
     inputButtons->addButtonReleaseHandler(A0buttonPwr,50,[]() { myControl.pressPowerButton(); });
     inputButtons->addButtonReleaseHandler(A0buttonPwr,4000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
@@ -355,16 +292,17 @@ void setupHandler() {
     inputButtons->addButtonHoldHandler(A0buttonPwr,4000,[]() { buzz("reset"); });
     inputButtons->addButtonReleaseHandler(A0button1Cup,50,[]() { myControl.pressLeftButton(); });
     inputButtons->addButtonReleaseHandler(A0button2Cup,50,[]() { myControl.pressRightButton(); });
-  }
+  }*/
 
   if (BuzzerSetting.get()) tone(beeperPin, 2048, 500);
 
   Homie.getLogger() << endl << "☕☕☕☕ Enjoy your SenseoWifi ☕☕☕☕" << endl << endl;
 
   senseoNode.setProperty("opState").send(mySenseoSM.getStateAsString());
-  if (CupDetectorAvailableSetting.get()) {
-    senseoNode.setProperty("cupAvailable").send(myCup.isAvailable() ? "true" : "false");
-    senseoNode.setProperty("cupFull").send(myCup.isFull() ? "true" : "false");
+  CupComponent * cupComponent = senseoFsm.getComponent<CupComponent>();
+  if (cupComponent != nullptr) {
+    senseoNode.setProperty("cupAvailable").send(cupComponent->isAvailable() ? "true" : "false");
+    senseoNode.setProperty("cupFull").send(cupComponent->isFull() ? "true" : "false");
   }
   senseoNode.setProperty("outOfWater").send("false");
   senseoNode.setProperty("brew").send("false");
@@ -375,17 +313,20 @@ void setupHandler() {
 *
 */
 void loopHandler() {
+  senseoFsm.update(millis());
+
   /**
   * Check and update the cup availability, based on the cup detector signal.
   * (no cup, cup available, cup full)
   */
-  if (CupDetectorAvailableSetting.get()) {
-    myCup.updateState();
-    if (myCup.isAvailableChanged()) {
-      senseoNode.setProperty("cupAvailable").send(myCup.isAvailable() ? "true" : "false");
+ CupComponent * cupComponent = senseoFsm.getComponent<CupComponent>();
+  if (cupComponent != nullptr) {
+    //myCup.updateState();
+    if (cupComponent->isAvailableChanged()) {
+      senseoNode.setProperty("cupAvailable").send(cupComponent->isAvailable() ? "true" : "false");
     }
-    if (myCup.isFullChanged()) {
-      senseoNode.setProperty("cupFull").send(myCup.isFull() ? "true" : "false");
+    if (cupComponent->isFullChanged()) {
+      senseoNode.setProperty("cupFull").send(cupComponent->isFull() ? "true" : "false");
     }
   }
 
@@ -408,7 +349,7 @@ void loopHandler() {
     senseoNode.setProperty("opState").send(mySenseoSM.getStateAsString());
 
     senseoStateExitAction();
-    senseoStateEntryAction();
+    //senseoStateEntryAction();
   }
 
   /**
@@ -468,8 +409,8 @@ void setup() {
   /**
   * Homie: Options, see at the top of this file.
   */
-  CupDetectorAvailableSetting.setDefaultValue(true);
-  BuzzerSetting.setDefaultValue(true);
+  CupDetectorAvailableSetting.setDefaultValue(false);
+  BuzzerSetting.setDefaultValue(false);
   PublishHomeAssistantDiscoveryConfig.setDefaultValue(false);
   UseCustomizableButtonsAddon.setDefaultValue(false);
 

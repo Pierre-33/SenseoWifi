@@ -3,6 +3,11 @@
 #include "BrewingState.h"
 #include "NoWaterState.h"
 #include "OffState.h"
+#include "FSM/Components/BuzzerComponent.h"
+
+void ReadyState::onEnter(FsmClassId previousState) {
+    EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,buzz("melody1"));
+}
 
 void ReadyState::onUpdate() {
     ledStateEnum ledState = senseoLed.getState();

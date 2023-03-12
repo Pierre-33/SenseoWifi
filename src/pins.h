@@ -15,7 +15,10 @@ Released under some license.
 #define cupDetectorPin D6       // TCRT5000 D0
 #define beeperPin D8            // BUZZER
 #define resetButtonPin D4       //
-#define cupDetectorAnalogPin A0 // TCRT5000 A0
+
+// used only with the Customizable Buttons Addon
+#define senseoLedOutPin D4         // this is the same as the reset pin which is fine as the reset button is no more need with the addon
+#define senseoButtonsInputPin A0  // 
 
 // Reset: D3 doesn't work (why?), D0 okay, D4 needs LED off
 

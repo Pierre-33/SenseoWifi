@@ -22,9 +22,7 @@ inline void testIO() {
     
     Serial.print("Testing Cup Detector ... ");
     Serial.print(!digitalRead(cupDetectorPin) ? "detected" : "not detected");
-    Serial.print(" (analog: ");
-    Serial.print(analogRead(cupDetectorAnalogPin));
-    Serial.println(")");
+    Serial.println();
     delay(1000);
     
     Serial.print("Testing Status LED Probe ... ");

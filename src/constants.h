@@ -29,4 +29,10 @@ static const int LedIgnoreChangeDuration = 5;
 // Duration of button "press" (in milliseconds)
 static const int pressDuration = 150;
 
+//Button threesholds for A0
+static const int A0buttonPwr = 147;
+static const int A0button1Cup = 429;
+static const int A0button2Cup = 711;
+static const int A0buttonThreeshold = 50;
+
 #endif

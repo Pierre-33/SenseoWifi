@@ -15,7 +15,18 @@ Released under some license.
 #include "testIO.cpp"
 #include "HomeAssistant.h"
 #include <ezBuzzer.h>
+#include "FSM/FsmWithComponents.h"
+#include "FSM/Components/SenseoLedControl.h"
+#include "FSM/Components/SenseoInputButtons.h"
+#include "FSM/Components/BuzzerComponent.h"
+#include "FSM/States/BrewingState.h"
+#include "FSM/States/HeatingState.h"
+#include "FSM/States/NoWaterState.h"
+#include "FSM/States/OffState.h"
+#include "FSM/States/ReadyState.h"
+#include "FSM/States/UnknownState.h"
 
+FsmWithComponents senseoFsm;
 SenseoLed mySenseoLed(ocSenseLedPin);
 SenseoSM mySenseoSM;
 SenseoControl myControl(ocPressPowerPin, ocPressLeftPin, ocPressRightPin);
@@ -26,6 +37,7 @@ HomieNode senseoNode("machine", "senseo-wifi", "senseo-wifi");
 HomieSetting<bool> CupDetectorAvailableSetting("cupdetector", "Enable cup detection (TCRT5000)");
 HomieSetting<bool> BuzzerSetting("buzzer", "Enable buzzer sounds (no water, cup finished, ...)");
 HomieSetting<bool> PublishHomeAssistantDiscoveryConfig("homeassistantautodiscovery", "Publish HomeAssistant discovery config, ...)");
+HomieSetting<bool> UseCustomizableButtonsAddon("usecustomizablebuttonsaddon", "Use the additional pcb to customize button behavior, ...)");
 
 /**
 * Called by the LED changed interrupt
@@ -316,6 +328,35 @@ void onHomieEvent(const HomieEvent &event) {
 *
 */
 void setupHandler() {
+  // configuring the state machine
+  //senseoFsm.addComponent(std::make_unique<SenseoCommands>());
+  //senseoFsm.addComponent(std::make_unique<SenseoControl>(ocPressPowerPin, ocPressLeftPin, ocPressRightPin));
+  senseoFsm.addComponent(std::make_unique<SenseoInputButtons>(senseoButtonsInputPin));
+  senseoFsm.addComponent(std::make_unique<SenseoLedControl>(senseoLedOutPin));
+  if (BuzzerSetting.get()) senseoFsm.addComponent(std::make_unique<BuzzerComponent>(beeperPin));
+
+  senseoFsm.addState(std::make_unique<BrewingState>(mySenseoLed,senseoNode));
+  senseoFsm.addState(std::make_unique<HeatingState>(mySenseoLed));
+  senseoFsm.addState(std::make_unique<NoWaterState>(mySenseoLed,senseoNode));
+  senseoFsm.addState(std::make_unique<OffState>(mySenseoLed,senseoNode));
+  senseoFsm.addState(std::make_unique<ReadyState>(mySenseoLed));
+  senseoFsm.addState(std::make_unique<UnknownState>(mySenseoLed));
+
+  senseoFsm.setInitialState<UnknownState>();
+
+  //configuring the button handler
+  SenseoInputButtons * inputButtons = senseoFsm.getComponent<SenseoInputButtons>();
+  if (inputButtons != nullptr) {
+    inputButtons->addButtonReleaseHandler(A0buttonPwr,50,[]() { myControl.pressPowerButton(); });
+    inputButtons->addButtonReleaseHandler(A0buttonPwr,4000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
+    inputButtons->addButtonReleaseHandler(A0buttonPwr,2000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
+    inputButtons->addButtonHoldHandler(A0buttonPwr,2000,[]() { buzz("tone2"); });
+    inputButtons->addButtonHoldHandler(A0buttonPwr,3000,[]() { buzz("tone2"); });
+    inputButtons->addButtonHoldHandler(A0buttonPwr,4000,[]() { buzz("reset"); });
+    inputButtons->addButtonReleaseHandler(A0button1Cup,50,[]() { myControl.pressLeftButton(); });
+    inputButtons->addButtonReleaseHandler(A0button2Cup,50,[]() { myControl.pressRightButton(); });
+  }
+
   if (BuzzerSetting.get()) tone(beeperPin, 2048, 500);
 
   Homie.getLogger() << endl << "☕☕☕☕ Enjoy your SenseoWifi ☕☕☕☕" << endl << endl;
@@ -375,7 +416,7 @@ void loopHandler() {
   * Check for a simulated button press - release after > 100ms
   */
   myControl.releaseIfPressed();
-  myBuzzer.loop();
+  //myBuzzer.loop();
 }
 
 void setup() {
@@ -398,8 +439,11 @@ void setup() {
 
   if (CupDetectorAvailableSetting.get()) {
     pinMode(cupDetectorPin, INPUT_PULLUP); 
-    pinMode(cupDetectorAnalogPin, INPUT);   
   }
+
+  pinMode(senseoButtonsInputPin, INPUT);  
+
+  Homie.getLogger() << endl << "A0 read :" << analogRead(senseoButtonsInputPin) << endl;
 
   /**
   * Testing routine. Activate only in development environemt.
@@ -427,6 +471,7 @@ void setup() {
   CupDetectorAvailableSetting.setDefaultValue(true);
   BuzzerSetting.setDefaultValue(true);
   PublishHomeAssistantDiscoveryConfig.setDefaultValue(false);
+  UseCustomizableButtonsAddon.setDefaultValue(false);
 
   /**
   * Homie: Advertise custom SenseoWifi MQTT topics

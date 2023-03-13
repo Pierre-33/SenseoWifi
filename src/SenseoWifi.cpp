@@ -12,7 +12,7 @@ Released under some license.
 #include "constants.h"
 #include "testIO.cpp"
 #include "HomeAssistant.h"
-#include "SenseoFsm/FsmWithComponents.h"
+#include "FsmWithComponent/FsmWithComponents.h"
 #include "SenseoFsm/Components/SenseoLedComponent.h"
 #include "SenseoFsm/Components/BuzzerComponent.h"
 #include "SenseoFsm/Components/CupComponent.h"

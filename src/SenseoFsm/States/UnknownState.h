@@ -1,7 +1,6 @@
-#ifndef UnknownState_h
-#define UnknownState_h
+#pragma once
 
-#include "SenseoFsm/FsmState.h"
+#include "FsmWithComponent/FsmState.h"
 
 class SenseoLed;
 
@@ -16,6 +15,3 @@ class UnknownState : public FsmState
     private:
         SenseoLed & senseoLed;
 };
-
-#endif
-

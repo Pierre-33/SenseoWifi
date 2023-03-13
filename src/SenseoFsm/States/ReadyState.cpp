@@ -3,8 +3,8 @@
 #include "BrewingState.h"
 #include "NoWaterState.h"
 #include "OffState.h"
-#include "SenseoFsm/Components/BuzzerComponent.h"
-#include "SenseoFsm/Components/SenseoLedComponent.h"
+#include "../Components/BuzzerComponent.h"
+#include "../Components/SenseoLedComponent.h"
 
 void ReadyState::onEnter(StateId previousState) {
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,turnOn());

@@ -5,7 +5,7 @@
 #include "ReadyState.h"
 #include "OffState.h"
 #include "BrewingState.h"
-#include "SenseoFsm/Components/SenseoLedComponent.h"
+#include "../Components/SenseoLedComponent.h"
 
 void HeatingState::onEnter(StateId previousState) {
   EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(1000));

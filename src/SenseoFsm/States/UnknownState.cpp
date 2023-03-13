@@ -4,7 +4,7 @@
 #include "NoWaterState.h"
 #include "ReadyState.h"
 #include "OffState.h"
-#include "SenseoFsm/Components/SenseoLedComponent.h"
+#include "../Components/SenseoLedComponent.h"
 
 void UnknownState::onEnter(StateId previousState) {
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(200,1000));

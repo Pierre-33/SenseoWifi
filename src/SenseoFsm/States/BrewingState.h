@@ -1,5 +1,5 @@
 #pragma once
-#include "SenseoFsm/FsmState.h"
+#include "FsmWithComponent/FsmState.h"
 
 class SenseoLed;
 class HomieNode;

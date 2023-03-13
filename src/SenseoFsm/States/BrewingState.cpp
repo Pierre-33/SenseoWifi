@@ -5,8 +5,8 @@
 #include "ReadyState.h"
 #include "OffState.h"
 #include "constants.h"
-#include "SenseoFsm/Components/CupComponent.h"
-#include "SenseoFsm/Components/SenseoLedComponent.h"
+#include "../Components/CupComponent.h"
+#include "../Components/SenseoLedComponent.h"
 
 void BrewingState::onEnter(StateId previousState) {
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(2000,500));

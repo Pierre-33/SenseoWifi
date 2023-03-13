@@ -1,5 +1,4 @@
-#ifndef FsmComponent_h
-#define FsmComponent_h
+#pragma once
 
 #include "FsmComponentId.h"
 
@@ -20,5 +19,3 @@ template <typename Derived> class FsmComponent : public BaseFsmComponent
       return id;
     }
 };
-
-#endif

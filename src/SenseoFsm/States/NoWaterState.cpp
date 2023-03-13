@@ -4,8 +4,8 @@
 #include "HeatingState.h"
 #include "ReadyState.h"
 #include "OffState.h"
-#include "SenseoFsm/Components/BuzzerComponent.h"
-#include "SenseoFsm/Components/SenseoLedComponent.h"
+#include "../Components/BuzzerComponent.h"
+#include "../Components/SenseoLedComponent.h"
 
 void NoWaterState::onEnter(StateId previousState) {
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(100));

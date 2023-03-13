@@ -11,7 +11,6 @@
 #include "Homie.h"
 #include "enums.h"
 #include "constants.h"
-#include "SenseoFsm/FsmComponent.h"
 
 /**
  * SenseoInputButtons is use to associate callback with Senseo Buttons

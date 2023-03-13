@@ -1,3 +1,3 @@
 #include "FsmComponent.h"
 
-//int ClassIdGenerator::nextId = 0;
+//int FsmComponentIdGenerator::nextId = 0;

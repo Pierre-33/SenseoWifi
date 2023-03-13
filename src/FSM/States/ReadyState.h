@@ -10,7 +10,7 @@ class ReadyState : public FsmState
         
         ReadyState(SenseoLed & led) : senseoLed(led) {}
         virtual void onEnter(StateId previousState);
-        //virtual void onExit(FsmClassId nextState);
+        //virtual void onExit(FsmComponentId nextState);
         virtual void onUpdate();
     private:
         SenseoLed & senseoLed;

@@ -39,10 +39,10 @@ class FsmState
 /*template <typename Derived> class FsmState : public FsmState
 {
     public:
-        virtual FsmClassId getStateId() { return getClassId();  }
-        static FsmClassId getClassId() 
+        virtual FsmComponentId getStateId() { return getClassId();  }
+        static FsmComponentId getClassId() 
         {
-            static FsmClassId id = FsmClassIdGenerator::nextId++;
+            static FsmComponentId id = FsmComponentIdGenerator::nextId++;
             return id;
         }
 };*/

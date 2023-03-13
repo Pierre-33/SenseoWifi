@@ -6,7 +6,7 @@
 #include <memory>
 #include <type_traits>
 #include <map>
-#include "FsmClassId.h"
+#include "FsmComponentId.h"
 #include "FsmStateId.h"
 
 class BaseFsmComponent;
@@ -20,7 +20,7 @@ class FsmWithComponents
         template<class T> 
         bool addComponent(std::unique_ptr<T> && component){
             static_assert(std::is_base_of<BaseFsmComponent,T>::value, "T must derive from BaseFsmComponent");
-            FsmClassId classId = T::getClassId();
+            FsmComponentId classId = T::getClassId();
             if (components.find(classId) != components.end()) return false;
             else {
                 components[classId] = std::move(component);
@@ -73,7 +73,7 @@ class FsmWithComponents
         FsmState * nextState = nullptr;
         std::vector<StateChangeHandler> stateChangeHandlers;
 
-        std::map<FsmClassId,std::unique_ptr<BaseFsmComponent>> components;
+        std::map<FsmComponentId,std::unique_ptr<BaseFsmComponent>> components;
         std::map<StateId,std::unique_ptr<FsmState>> states;
 
 };

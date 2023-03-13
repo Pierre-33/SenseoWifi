@@ -1,7 +1,7 @@
 #ifndef FsmComponent_h
 #define FsmComponent_h
 
-#include "FsmClassId.h"
+#include "FsmComponentId.h"
 
 class BaseFsmComponent
 {
@@ -15,8 +15,8 @@ class BaseFsmComponent
 template <typename Derived> class FsmComponent : public BaseFsmComponent
 {
   public:
-    static FsmClassId getClassId() {
-      static FsmClassId id = FsmClassIdGenerator::nextId++;
+    static FsmComponentId getClassId() {
+      static FsmComponentId id = FsmComponentIdGenerator::nextId++;
       return id;
     }
 };

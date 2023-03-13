@@ -1,12 +1,18 @@
-#include "SenseoLedControl.h"
+#include "SenseoLedComponent.h"
+#include "Arduino.h"
 
-SenseoLedControl::SenseoLedControl(int pLedPin) {
+/*#include "Homie.h"
+#include "enums.h"
+#include "constants.h"*/
+
+
+SenseoLedComponent::SenseoLedComponent(int pLedPin) {
   ledPin = pLedPin;
   timestampChanged = millis();
   digitalWrite(ledPin, LOW);  
 }
 
-void SenseoLedControl::turnOn(){
+void SenseoLedComponent::turnOn(){
   milliOff = 0;
   milliOn = 0;
   if (currentState != true) {
@@ -16,7 +22,7 @@ void SenseoLedControl::turnOn(){
   }
 }
 
-void SenseoLedControl::turnOff(){
+void SenseoLedComponent::turnOff(){
   milliOff = 0;
   milliOn = 0;
   if (currentState != false) {
@@ -26,12 +32,12 @@ void SenseoLedControl::turnOff(){
   }
 }
 
-void SenseoLedControl::blink(unsigned long _milliOn, unsigned long _milliOff /*=0*/){
+void SenseoLedComponent::blink(unsigned long _milliOn, unsigned long _milliOff /*=0*/){
   milliOn = _milliOn;
   milliOff = _milliOff > 0 ?  _milliOff : _milliOn;  
 }
 
-void SenseoLedControl::update(){
+void SenseoLedComponent::update(){
   if (milliOn > 0 && milliOff > 0){
     unsigned long currentMillis = millis();
     if (currentState == true && currentMillis - timestampChanged >= milliOn){

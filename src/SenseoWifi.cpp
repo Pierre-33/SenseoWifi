@@ -15,7 +15,7 @@ Released under some license.
 #include "HomeAssistant.h"
 //#include <ezBuzzer.h>
 #include "FSM/FsmWithComponents.h"
-#include "FSM/Components/SenseoLedControl.h"
+#include "FSM/Components/SenseoLedComponent.h"
 //#include "FSM/Components/SenseoInputButtons.h"
 #include "FSM/Components/BuzzerComponent.h"
 #include "FSM/Components/CupComponent.h"
@@ -280,7 +280,7 @@ void setupHandler() {
   //senseoFsm.addComponent(std::make_unique<SenseoCommands>());
   //senseoFsm.addComponent(std::make_unique<SenseoControl>(ocPressPowerPin, ocPressLeftPin, ocPressRightPin));
   //senseoFsm.addComponent(std::make_unique<SenseoInputButtons>(senseoButtonsInputPin));
-  senseoFsm.addComponent(std::make_unique<SenseoLedControl>(senseoLedOutPin));
+  senseoFsm.addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
   if (BuzzerSetting.get()) senseoFsm.addComponent(std::make_unique<BuzzerComponent>(beeperPin));
   if (CupDetectorAvailableSetting.get()) senseoFsm.addComponent(std::make_unique<CupComponent>(cupDetectorPin));
 

@@ -5,7 +5,7 @@
 
 class SenseoLed;
 
-class UnknownState : public BaseFsmState
+class UnknownState : public FsmState
 {
     public:
         DECLARE_STATE("SENSEO_UNKNOWN");

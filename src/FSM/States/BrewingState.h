@@ -4,7 +4,7 @@
 class SenseoLed;
 class HomieNode;
 
-class BrewingState : public BaseFsmState
+class BrewingState : public FsmState
 {
     public:
         DECLARE_STATE("SENSEO_BREWING");

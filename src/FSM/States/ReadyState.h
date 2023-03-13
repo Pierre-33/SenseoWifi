@@ -3,7 +3,7 @@
 
 class SenseoLed;
 
-class ReadyState : public BaseFsmState
+class ReadyState : public FsmState
 {    
     public:
         DECLARE_STATE("SENSEO_READY");

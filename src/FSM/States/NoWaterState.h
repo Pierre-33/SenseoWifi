@@ -4,7 +4,7 @@
 class SenseoLed;
 class HomieNode;
 
-class NoWaterState : public BaseFsmState
+class NoWaterState : public FsmState
 {
     public:
         DECLARE_STATE("SENSEO_NOWATTER");

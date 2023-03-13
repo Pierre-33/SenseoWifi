@@ -4,7 +4,7 @@
 class SenseoLed;
 class HomieNode;
 
-class OffState : public BaseFsmState
+class OffState : public FsmState
 {
     public:
         DECLARE_STATE("SENSEO_OFF");

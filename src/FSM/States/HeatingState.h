@@ -3,7 +3,7 @@
 
 class SenseoLed;
 
-class HeatingState : public BaseFsmState
+class HeatingState : public FsmState
 {
     public:
         DECLARE_STATE("SENSEO_HEATING");

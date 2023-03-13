@@ -46,7 +46,7 @@ void IRAM_ATTR ledChangedHandler() {
   mySenseoLed.pinStateToggled();
 }
 
-void onSenseoStateChange(BaseFsmState * prevState, BaseFsmState * nextState) {
+void onSenseoStateChange(FsmState * prevState, FsmState * nextState) {
   if (true) Homie.getLogger() << "Senseo state machine, new Senseo state: " << nextState->getStateName() << endl;
   
   senseoNode.setProperty("opState").send(nextState->getStateName());

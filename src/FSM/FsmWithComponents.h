@@ -10,9 +10,9 @@
 #include "FsmStateId.h"
 
 class BaseFsmComponent;
-class BaseFsmState;
+class FsmState;
 
-typedef std::function<void (BaseFsmState * prevState, BaseFsmState * newState)> StateChangeHandler;
+typedef std::function<void (FsmState * prevState, FsmState * newState)> StateChangeHandler;
 
 class FsmWithComponents
 {
@@ -30,7 +30,7 @@ class FsmWithComponents
 
         template<class T> 
         bool addState(std::unique_ptr<T> && state){
-            static_assert(std::is_base_of<BaseFsmState,T>::value, "T must derive from BaseFsmState");
+            static_assert(std::is_base_of<FsmState,T>::value, "T must derive from FsmState");
             StateId stateId = T::s_StateId;
             if (states.find(stateId) != states.end()) return false;
             else {
@@ -60,7 +60,7 @@ class FsmWithComponents
         unsigned long getTimeInState() const { return lastUpdateMillis - lastStateChangeMillis; }
 
     private:
-        friend class BaseFsmState;
+        friend class FsmState;
         void changeState(StateId classId); //changeState should not be called from outside a state
 
         void updateComponents();
@@ -69,11 +69,11 @@ class FsmWithComponents
         unsigned long lastStateChangeMillis = 0;
         unsigned long lastUpdateMillis = 0;
 
-        BaseFsmState * currentState = nullptr;
-        BaseFsmState * nextState = nullptr;
+        FsmState * currentState = nullptr;
+        FsmState * nextState = nullptr;
         std::vector<StateChangeHandler> stateChangeHandlers;
 
         std::map<FsmClassId,std::unique_ptr<BaseFsmComponent>> components;
-        std::map<StateId,std::unique_ptr<BaseFsmState>> states;
+        std::map<StateId,std::unique_ptr<FsmState>> states;
 
 };

@@ -12,7 +12,7 @@
 
 
 
-class BaseFsmState
+class FsmState
 {
     public:
         virtual void onInitialized() {}
@@ -36,7 +36,7 @@ class BaseFsmState
         FsmWithComponents * myFsm = nullptr;
 };
 
-/*template <typename Derived> class FsmState : public BaseFsmState
+/*template <typename Derived> class FsmState : public FsmState
 {
     public:
         virtual FsmClassId getStateId() { return getClassId();  }

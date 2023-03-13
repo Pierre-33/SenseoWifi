@@ -7,7 +7,6 @@ Released under some license.
 #include <Homie.h>
 
 #include "SenseoLed.h"
-#include "SenseoSM.h"
 #include "SenseoControl.h"
 #include "pins.h"
 #include "constants.h"

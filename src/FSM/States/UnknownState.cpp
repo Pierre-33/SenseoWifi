@@ -4,6 +4,11 @@
 #include "NoWaterState.h"
 #include "ReadyState.h"
 #include "OffState.h"
+#include "FSM/Components/SenseoLedComponent.h"
+
+void UnknownState::onEnter(StateId previousState) {
+    EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(200,1000));
+}
 
 void UnknownState::onUpdate() {
     ledStateEnum ledState = senseoLed.getState();

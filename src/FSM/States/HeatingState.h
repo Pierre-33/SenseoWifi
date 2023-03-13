@@ -8,9 +8,9 @@ class HeatingState : public FsmState
     public:
         DECLARE_STATE("SENSEO_HEATING");
         HeatingState(SenseoLed & led) : senseoLed(led) {}
-        //virtual void onEnter(FsmComponentId previousState);
-        //virtual void onExit(FsmComponentId nextState);
-        virtual void onUpdate();
+        virtual void onEnter(StateId previousState) override;
+        //virtual void onExit(StateId nextState) override;
+        virtual void onUpdate() override;
     private:
         SenseoLed & senseoLed;
 };

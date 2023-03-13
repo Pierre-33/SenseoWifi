@@ -5,8 +5,10 @@
 #include "ReadyState.h"
 #include "OffState.h"
 #include "FSM/Components/BuzzerComponent.h"
+#include "FSM/Components/SenseoLedComponent.h"
 
 void NoWaterState::onEnter(StateId previousState) {
+    EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(100));
     EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,buzz("melody2"));
     senseoNode.setProperty("outOfWater").send("true");
 }

@@ -50,12 +50,14 @@ void onSenseoStateChange(FsmState * prevState, FsmState * nextState) {
   if (true) Homie.getLogger() << "Senseo state machine, new Senseo state: " << nextState->getStateName() << endl;
   
   senseoNode.setProperty("opState").send(nextState->getStateName());
-  int secondInPrevState = (prevState->getTimeInState() + 500) / 1000;
-  senseoNode.setProperty("debug").send(
-    String("senseoState: Switching from ") + String(prevState->getStateName())
-    + String(" to ") + String(nextState->getStateName())
-    + String(" after ") + String(secondInPrevState) + String(" seconds")
-  );
+  if (prevState != nullptr) {
+    int secondInPrevState = (prevState->getTimeInState() + 500) / 1000;
+    senseoNode.setProperty("debug").send(
+      String("senseoState: Switching from ") + String(prevState->getStateName())
+      + String(" to ") + String(nextState->getStateName())
+      + String(" after ") + String(secondInPrevState) + String(" seconds")
+    );
+  }
 }
 
 /**
@@ -280,9 +282,10 @@ void setupHandler() {
   //senseoFsm.addComponent(std::make_unique<SenseoCommands>());
   //senseoFsm.addComponent(std::make_unique<SenseoControl>(ocPressPowerPin, ocPressLeftPin, ocPressRightPin));
   //senseoFsm.addComponent(std::make_unique<SenseoInputButtons>(senseoButtonsInputPin));
-  senseoFsm.addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
+  //senseoFsm.addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
   if (BuzzerSetting.get()) senseoFsm.addComponent(std::make_unique<BuzzerComponent>(beeperPin));
   if (CupDetectorAvailableSetting.get()) senseoFsm.addComponent(std::make_unique<CupComponent>(cupDetectorPin));
+  if (UseCustomizableButtonsAddon.get()) senseoFsm.addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
 
   senseoFsm.addState(std::make_unique<BrewingState>(mySenseoLed,senseoNode));
   senseoFsm.addState(std::make_unique<HeatingState>(mySenseoLed));
@@ -389,8 +392,8 @@ void setup() {
   digitalWrite(ocPressRightPin, LOW);
 
   pinMode(beeperPin, OUTPUT);
-  pinMode(resetButtonPin, INPUT_PULLUP);
 
+  // it seems at this point Homie configuration variable are not set
   if (CupDetectorAvailableSetting.get()) {
     pinMode(cupDetectorPin, INPUT_PULLUP); 
   }
@@ -415,17 +418,17 @@ void setup() {
   Homie_setBrand("SenseoWifi");
   //Homie.disableResetTrigger();
   Homie.disableLedFeedback();
-  Homie.setResetTrigger(resetButtonPin, LOW, 5000);
+  //if (!UseCustomizableButtonsAddon.get()) Homie.setResetTrigger(resetButtonPin, LOW, 5000);
   Homie.setSetupFunction(setupHandler);
   Homie.setLoopFunction(loopHandler);
 
   /**
   * Homie: Options, see at the top of this file.
   */
-  CupDetectorAvailableSetting.setDefaultValue(false);
+  CupDetectorAvailableSetting.setDefaultValue(true);
   BuzzerSetting.setDefaultValue(false);
   PublishHomeAssistantDiscoveryConfig.setDefaultValue(false);
-  UseCustomizableButtonsAddon.setDefaultValue(false);
+  UseCustomizableButtonsAddon.setDefaultValue(true);
 
   /**
   * Homie: Advertise custom SenseoWifi MQTT topics
@@ -443,6 +446,17 @@ void setup() {
   if (BuzzerSetting.get()) tone(beeperPin, 1536, 2000);
   Homie.onEvent(onHomieEvent);
   Homie.setup();
+
+  //TODO: test if I can move all setup things in the setup handler
+  if (UseCustomizableButtonsAddon.get()) {
+    Homie.getLogger() << "Shuting down the led" << endl;
+    pinMode(senseoLedOutPin, OUTPUT);  
+    digitalWrite(senseoLedOutPin, LOW);
+  }
+  else {
+    pinMode(resetButtonPin, INPUT_PULLUP);
+    Homie.setResetTrigger(resetButtonPin, LOW, 5000);
+  }
 }
 
 void loop() {

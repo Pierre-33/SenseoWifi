@@ -27,8 +27,9 @@ void FsmWithComponents::updateFsm() {
         nextState->onEnter(currentState ? currentState->getStateId() : INVALID_FSM_CLASS_ID);
         currentState = nextState;
         nextState = nullptr;
-        
-  }
+    }
+
+    if (currentState != nullptr) currentState->onUpdate();
 }
 
 void FsmWithComponents::changeState(StateId stateId) {

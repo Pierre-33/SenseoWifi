@@ -9,9 +9,9 @@ class ReadyState : public FsmState
         DECLARE_STATE("SENSEO_READY");
         
         ReadyState(SenseoLed & led) : senseoLed(led) {}
-        virtual void onEnter(StateId previousState);
-        //virtual void onExit(FsmComponentId nextState);
-        virtual void onUpdate();
+        virtual void onEnter(StateId previousState) override;
+        //virtual void onExit(FsmComponentId nextState) override;
+        virtual void onUpdate() override;
     private:
         SenseoLed & senseoLed;
 };

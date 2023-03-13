@@ -4,8 +4,10 @@
 #include "NoWaterState.h"
 #include "OffState.h"
 #include "FSM/Components/BuzzerComponent.h"
+#include "FSM/Components/SenseoLedComponent.h"
 
 void ReadyState::onEnter(StateId previousState) {
+    EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,turnOn());
     EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,buzz("melody1"));
 }
 

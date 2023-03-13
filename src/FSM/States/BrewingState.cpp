@@ -6,8 +6,11 @@
 #include "OffState.h"
 #include "constants.h"
 #include "Fsm/Components/CupComponent.h"
+#include "FSM/Components/SenseoLedComponent.h"
 
 void BrewingState::onEnter(StateId previousState) {
+    EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(2000,500));
+
     CupComponent * cupComponent = getComponent<CupComponent>();
     if (cupComponent != nullptr) {
         if (cupComponent->isAvailable()) {

@@ -11,9 +11,9 @@ class BrewingState : public FsmState
 
         BrewingState(SenseoLed & led, HomieNode & node) : senseoLed(led),senseoNode(node) {}
 
-        virtual void onEnter(StateId previousState);
-        virtual void onExit(StateId nextState);
-        virtual void onUpdate();
+        virtual void onEnter(StateId previousState) override;
+        virtual void onExit(StateId nextState) override;
+        virtual void onUpdate() override;
 
     private: 
         SenseoLed & senseoLed;

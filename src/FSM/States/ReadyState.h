@@ -3,11 +3,13 @@
 
 class SenseoLed;
 
-class ReadyState : public FsmState<ReadyState>
-{
+class ReadyState : public BaseFsmState
+{    
     public:
+        DECLARE_STATE("SENSEO_READY");
+        
         ReadyState(SenseoLed & led) : senseoLed(led) {}
-        virtual void onEnter(FsmClassId previousState);
+        virtual void onEnter(StateId previousState);
         //virtual void onExit(FsmClassId nextState);
         virtual void onUpdate();
     private:

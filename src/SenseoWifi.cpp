@@ -16,7 +16,7 @@ Released under some license.
 //#include <ezBuzzer.h>
 #include "FSM/FsmWithComponents.h"
 #include "FSM/Components/SenseoLedControl.h"
-#include "FSM/Components/SenseoInputButtons.h"
+//#include "FSM/Components/SenseoInputButtons.h"
 #include "FSM/Components/BuzzerComponent.h"
 #include "FSM/Components/CupComponent.h"
 #include "FSM/States/BrewingState.h"
@@ -28,7 +28,7 @@ Released under some license.
 
 FsmWithComponents senseoFsm;
 SenseoLed mySenseoLed(ocSenseLedPin);
-SenseoSM mySenseoSM;
+//SenseoSM mySenseoSM;
 SenseoControl myControl(ocPressPowerPin, ocPressLeftPin, ocPressRightPin);
 //Cup myCup(cupDetectorPin);
 //ezBuzzer myBuzzer(beeperPin);
@@ -46,6 +46,18 @@ void IRAM_ATTR ledChangedHandler() {
   mySenseoLed.pinStateToggled();
 }
 
+void onSenseoStateChange(BaseFsmState * prevState, BaseFsmState * nextState) {
+  if (true) Homie.getLogger() << "Senseo state machine, new Senseo state: " << nextState->getStateName() << endl;
+  
+  senseoNode.setProperty("opState").send(nextState->getStateName());
+  int secondInPrevState = (prevState->getTimeInState() + 500) / 1000;
+  senseoNode.setProperty("debug").send(
+    String("senseoState: Switching from ") + String(prevState->getStateName())
+    + String(" to ") + String(nextState->getStateName())
+    + String(" after ") + String(secondInPrevState) + String(" seconds")
+  );
+}
+
 /**
 * Called by Homie upon an MQTT message to '.../power'
 * MQTT response is sent from this routine, as pessimistic feedback from state machine is too slow and triggers a timeout in e.g. Home Assistant.
@@ -56,11 +68,11 @@ bool powerHandler(const HomieRange& range, const String& value) {
     return false;
   }
 
-  if (value == "true" && mySenseoSM.getState() == SENSEO_OFF) {
+  if (value == "true" && senseoFsm.isInState<OffState>()) {
     myControl.pressPowerButton();
     senseoNode.setProperty("power").send("true");
   }
-  else if (value == "false" && mySenseoSM.getState() != SENSEO_OFF) {
+  else if (value == "false" && !senseoFsm.isInState<OffState>()) {
     myControl.pressPowerButton();
     senseoNode.setProperty("power").send("false");
   }
@@ -140,13 +152,13 @@ bool buzzerHandler(const HomieRange& range, const String& value) {
 /**
 * Senseo state machine, transition reaction: exit actions
 */
-void senseoStateExitAction() {
+/*void senseoStateExitAction() {
   senseoNode.setProperty("debug").send(
     String("senseoState: Switching from ") + String(mySenseoSM.getStatePrevAsString())
     + String(" to ") + String(mySenseoSM.getStateAsString())
     + String(" after ") + String(mySenseoSM.getSecondsInLastState()) + String(" seconds")
   );
-}
+}*/
 
 /**
 * Senseo state machine, transition reaction: entry actions
@@ -278,6 +290,7 @@ void setupHandler() {
   senseoFsm.addState(std::make_unique<OffState>(mySenseoLed,senseoNode));
   senseoFsm.addState(std::make_unique<ReadyState>(mySenseoLed));
   senseoFsm.addState(std::make_unique<UnknownState>(mySenseoLed));
+  senseoFsm.registerStateChangeHandler(onSenseoStateChange);
 
   senseoFsm.setInitialState<UnknownState>();
 
@@ -298,7 +311,7 @@ void setupHandler() {
 
   Homie.getLogger() << endl << "☕☕☕☕ Enjoy your SenseoWifi ☕☕☕☕" << endl << endl;
 
-  senseoNode.setProperty("opState").send(mySenseoSM.getStateAsString());
+  senseoNode.setProperty("opState").send(UnknownState::s_StateName);
   CupComponent * cupComponent = senseoFsm.getComponent<CupComponent>();
   if (cupComponent != nullptr) {
     senseoNode.setProperty("cupAvailable").send(cupComponent->isAvailable() ? "true" : "false");
@@ -313,6 +326,15 @@ void setupHandler() {
 *
 */
 void loopHandler() {
+  /**
+  * Update the low level LED state machine based on the measured LED timings.
+  * (off, slow blinking, fast blinking, on)
+  */
+  mySenseoLed.updateState();
+  if (mySenseoLed.hasChanged()) {
+    if (true) Homie.getLogger() << "LED state machine, new LED state: " << mySenseoLed.getStateAsString() << endl;
+  }
+
   senseoFsm.update(millis());
 
   /**
@@ -331,26 +353,17 @@ void loopHandler() {
   }
 
   /**
-  * Update the low level LED state machine based on the measured LED timings.
-  * (off, slow blinking, fast blinking, on)
-  */
-  mySenseoLed.updateState();
-  if (mySenseoLed.hasChanged()) {
-    if (true) Homie.getLogger() << "LED state machine, new LED state: " << mySenseoLed.getStateAsString() << endl;
-  }
-
-  /**
   * Update the higher level Senseo state machine based on the LED state.
   * (off, heating, ready, brewing, no water)
   */
-  mySenseoSM.updateState(mySenseoLed.getState());
+  /*mySenseoSM.updateState(mySenseoLed.getState());
   if (mySenseoSM.stateHasChanged()) {
     if (true) Homie.getLogger() << "Senseo state machine, new Senseo state: " << mySenseoSM.getStateAsString() << endl;
     senseoNode.setProperty("opState").send(mySenseoSM.getStateAsString());
 
     senseoStateExitAction();
-    //senseoStateEntryAction();
-  }
+    senseoStateEntryAction();
+  }*/
 
   /**
   * Non-blocking Low-High-Low transition.
@@ -382,7 +395,7 @@ void setup() {
     pinMode(cupDetectorPin, INPUT_PULLUP); 
   }
 
-  pinMode(senseoButtonsInputPin, INPUT);  
+  //pinMode(senseoButtonsInputPin, INPUT);  
 
   Homie.getLogger() << endl << "A0 read :" << analogRead(senseoButtonsInputPin) << endl;
 
@@ -425,7 +438,7 @@ void setup() {
   senseoNode.advertise("outOfWater").setName("Out of Water").setDatatype("boolean");
   if (CupDetectorAvailableSetting.get()) senseoNode.advertise("cupAvailable").setName("Cup Available");
   if (CupDetectorAvailableSetting.get()) senseoNode.advertise("cupFull").setName("Cup Full");
-  if (BuzzerSetting.get()) senseoNode.advertise("buzzer").setName("Buzzer").settable(buzzerHandler).setDatatype("enum").setFormat("tone1,tone2,tone3,tone4");
+  if (BuzzerSetting.get()) senseoNode.advertise("buzzer").setName("Buzzer").settable(buzzerHandler).setDatatype("enum").setFormat("melody1,melody2,melody3");
 
   if (BuzzerSetting.get()) tone(beeperPin, 1536, 2000);
   Homie.onEvent(onHomieEvent);

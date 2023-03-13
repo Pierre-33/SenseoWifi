@@ -1,13 +1,18 @@
-#ifndef FsmWithComponents_h
-#define FsmWithComponents_h
+#pragma once
 
+#include <functional>
+#include <vector>
+#include <set>
 #include <memory>
 #include <type_traits>
 #include <map>
 #include "FsmClassId.h"
+#include "FsmStateId.h"
 
 class BaseFsmComponent;
 class BaseFsmState;
+
+typedef std::function<void (BaseFsmState * prevState, BaseFsmState * newState)> StateChangeHandler;
 
 class FsmWithComponents
 {
@@ -26,11 +31,11 @@ class FsmWithComponents
         template<class T> 
         bool addState(std::unique_ptr<T> && state){
             static_assert(std::is_base_of<BaseFsmState,T>::value, "T must derive from BaseFsmState");
-            FsmClassId classId = T::getClassId();
-            if (states.find(classId) != states.end()) return false;
+            StateId stateId = T::s_StateId;
+            if (states.find(stateId) != states.end()) return false;
             else {
                 state->initialize(this);
-                states[classId] = std::move(state);
+                states[stateId] = std::move(state);
                 return true;
             }
         }
@@ -40,15 +45,23 @@ class FsmWithComponents
             if (iter != components.end()) return (T*)iter->second.get();
             else return nullptr;
         }
+
+        // The function will be call after the prevState->OnExit() and before nextState->onEntry()
+        // Calling prevState->getTimeInState() will properly return the time spend in that state
+        void registerStateChangeHandler(const StateChangeHandler &handler);
         
         void update(unsigned long currentTime);
-        void setInitialState(FsmClassId classId);
-        template<class T> void setInitialState() { setInitialState(T::getClassId()); }
-        unsigned long getTimeInState() { return lastUpdateMillis - lastStateChangeMillis; }
+
+        void setInitialState(StateId stateId);
+        template<class T> void setInitialState() { setInitialState(T::s_StateId); }
+
+        bool isInState(StateId stateId) const;
+        template <class T> bool isInState() const { return isInState(T::s_StateId); }
+        unsigned long getTimeInState() const { return lastUpdateMillis - lastStateChangeMillis; }
 
     private:
         friend class BaseFsmState;
-        void changeState(FsmClassId classId); //changeState should not be called from outside a state
+        void changeState(StateId classId); //changeState should not be called from outside a state
 
         void updateComponents();
         void updateFsm();
@@ -58,10 +71,9 @@ class FsmWithComponents
 
         BaseFsmState * currentState = nullptr;
         BaseFsmState * nextState = nullptr;
+        std::vector<StateChangeHandler> stateChangeHandlers;
 
         std::map<FsmClassId,std::unique_ptr<BaseFsmComponent>> components;
-        std::map<FsmClassId,std::unique_ptr<BaseFsmState>> states;
+        std::map<StateId,std::unique_ptr<BaseFsmState>> states;
 
 };
-
-#endif

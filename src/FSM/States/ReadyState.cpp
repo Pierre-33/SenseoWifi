@@ -5,7 +5,7 @@
 #include "OffState.h"
 #include "FSM/Components/BuzzerComponent.h"
 
-void ReadyState::onEnter(FsmClassId previousState) {
+void ReadyState::onEnter(StateId previousState) {
     EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,buzz("melody1"));
 }
 

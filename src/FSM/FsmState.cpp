@@ -7,7 +7,7 @@ void BaseFsmState::initialize(FsmWithComponents * fsm)
     onInitialized();
 }
 
-void BaseFsmState::changeState(FsmClassId classId)
+void BaseFsmState::changeState(StateId classId)
 {
     assert (myFsm != nullptr);
     myFsm->changeState(classId);

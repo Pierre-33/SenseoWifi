@@ -7,7 +7,7 @@
 #include "constants.h"
 #include "Fsm/Components/CupComponent.h"
 
-void BrewingState::onEnter(FsmClassId previousState) {
+void BrewingState::onEnter(StateId previousState) {
     CupComponent * cupComponent = getComponent<CupComponent>();
     if (cupComponent != nullptr) {
         if (cupComponent->isAvailable()) {
@@ -28,7 +28,7 @@ void BrewingState::onUpdate() {
     else if (ledState == LED_ON) changeState<ReadyState>();
 }
 
-void BrewingState::onExit(FsmClassId nextState) {
+void BrewingState::onExit(StateId nextState) {
     senseoNode.setProperty("brew").send("false");
     // Determine brewed cup size based on time in brewing state
     int brewedSeconds = (getTimeInState()+ 500) / 1000;
@@ -38,7 +38,7 @@ void BrewingState::onExit(FsmClassId nextState) {
         // 0---------------------|-----+-----|-----+-----|-------100
         int tolerance = (BrewHeat2CupSeconds - BrewHeat1CupSeconds) / 2;
 
-        if (nextState == ReadyState::getClassId()) {
+        if (nextState == ReadyState::s_StateId) {
             if (abs(brewedSeconds - BrewHeat1CupSeconds) < tolerance) {
                 brewedSize = 1;
             }
@@ -48,7 +48,7 @@ void BrewingState::onExit(FsmClassId nextState) {
         }
 
         tolerance = (Brew2CupSeconds - Brew1CupSeconds) / 2;
-        if (nextState == NoWaterState::getClassId() || nextState == OffState::getClassId()) {
+        if (nextState == NoWaterState::s_StateId || nextState == OffState::s_StateId) {
             if (abs(brewedSeconds - Brew1CupSeconds) < tolerance) {
                 brewedSize = 1;
             }

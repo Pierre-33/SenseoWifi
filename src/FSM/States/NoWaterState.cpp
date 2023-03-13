@@ -6,7 +6,7 @@
 #include "OffState.h"
 #include "FSM/Components/BuzzerComponent.h"
 
-void NoWaterState::onEnter(FsmClassId previousState) {
+void NoWaterState::onEnter(StateId previousState) {
     EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,buzz("melody2"));
     senseoNode.setProperty("outOfWater").send("true");
 }
@@ -19,8 +19,8 @@ void NoWaterState::onUpdate() {
     else if (ledState == LED_OFF)  changeState<OffState>();
 }
 
-void NoWaterState::onExit(FsmClassId nextState) {
-    if (nextState != OffState::getClassId()) {
+void NoWaterState::onExit(StateId nextState) {
+    if (nextState != OffState::s_StateId) {
         senseoNode.setProperty("outOfWater").send("false");
       }
 }

@@ -17,6 +17,12 @@ void FsmWithComponents::updateComponents() {
 void FsmWithComponents::updateFsm() {
     if (nextState != nullptr) {
         if (currentState != nullptr) currentState->onExit(nextState->getStateId());
+        
+        //call state change handlers
+        for (const auto & handler: stateChangeHandlers) {
+            handler(currentState,nextState);
+        }
+
         lastStateChangeMillis = lastUpdateMillis;
         nextState->onEnter(currentState ? currentState->getStateId() : INVALID_FSM_CLASS_ID);
         currentState = nextState;
@@ -25,7 +31,7 @@ void FsmWithComponents::updateFsm() {
   }
 }
 
-void FsmWithComponents::changeState(FsmClassId stateId) {
+void FsmWithComponents::changeState(StateId stateId) {
     if (currentState != nullptr && currentState->getStateId() != stateId) {
         if (nextState == nullptr || nextState->getStateId() != stateId) {
             nextState = states[stateId].get();
@@ -33,6 +39,16 @@ void FsmWithComponents::changeState(FsmClassId stateId) {
     }
 }
 
-void FsmWithComponents::setInitialState(FsmClassId classId) {
-    assert(false);
+bool FsmWithComponents::isInState(StateId stateId) const {
+    return stateId == currentState->getStateId(); 
+}
+
+void FsmWithComponents::setInitialState(StateId stateId) {
+    assert(currentState == nullptr);
+    nextState = states[stateId].get();
+}
+
+void FsmWithComponents::registerStateChangeHandler(const StateChangeHandler &handler)
+{
+    stateChangeHandlers.push_back(handler);
 }

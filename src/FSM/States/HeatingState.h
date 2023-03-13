@@ -3,9 +3,10 @@
 
 class SenseoLed;
 
-class HeatingState : public FsmState<HeatingState>
+class HeatingState : public BaseFsmState
 {
     public:
+        DECLARE_STATE("SENSEO_HEATING");
         HeatingState(SenseoLed & led) : senseoLed(led) {}
         //virtual void onEnter(FsmClassId previousState);
         //virtual void onExit(FsmClassId nextState);

@@ -5,9 +5,10 @@
 
 class SenseoLed;
 
-class UnknownState : public FsmState<UnknownState>
+class UnknownState : public BaseFsmState
 {
     public:
+        DECLARE_STATE("SENSEO_UNKNOWN");
         UnknownState(SenseoLed & led) : senseoLed(led) {}
         virtual void onUpdate();
     

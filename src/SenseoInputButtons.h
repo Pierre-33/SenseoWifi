@@ -2,20 +2,21 @@
   SenseoInputButtons.h - Library for the SenseoWifi project.
   Released under some license.
 */
-#ifndef SenseoInputButtons_h
-#define SenseoInputButtons_h
+#pragma once
+
+#include <functional>
+#include <vector>
+#include <set>
 
 #include "Homie.h"
 #include "enums.h"
 #include "constants.h"
-#include <set>
-#include <vector>
 #include "FSM/FsmComponent.h"
 
 /**
  * SenseoInputButtons is use to associate callback with Senseo Buttons
  */
-class SenseoInputButtons : public  FsmComponent<SenseoInputButtons>
+class SenseoInputButtons
 {
   public:
     typedef std::function<void ()> ButtonHandler;
@@ -27,8 +28,6 @@ class SenseoInputButtons : public  FsmComponent<SenseoInputButtons>
     void addButtonReleaseHandler(int buttonValue,unsigned long time,const ButtonHandler &handler);
 
     void update();
-
-    void test() { Homie.getLogger() << "SenseoInputButtons ClassId = " << getClassId() << endl; }
 
   private:
     enum HandlerType {
@@ -53,5 +52,3 @@ class SenseoInputButtons : public  FsmComponent<SenseoInputButtons>
     std::set<int> handlersByValue;
     std::vector<HandlerData> handlers;
 };
-
-#endif

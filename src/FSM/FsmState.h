@@ -35,14 +35,3 @@ class FsmState
         void initialize(FsmWithComponents * fsm);
         FsmWithComponents * myFsm = nullptr;
 };
-
-/*template <typename Derived> class FsmState : public FsmState
-{
-    public:
-        virtual FsmComponentId getStateId() { return getClassId();  }
-        static FsmComponentId getClassId() 
-        {
-            static FsmComponentId id = FsmComponentIdGenerator::nextId++;
-            return id;
-        }
-};*/

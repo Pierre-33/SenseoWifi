@@ -13,10 +13,8 @@ Released under some license.
 #include "constants.h"
 #include "testIO.cpp"
 #include "HomeAssistant.h"
-//#include <ezBuzzer.h>
 #include "FSM/FsmWithComponents.h"
 #include "FSM/Components/SenseoLedComponent.h"
-//#include "FSM/Components/SenseoInputButtons.h"
 #include "FSM/Components/BuzzerComponent.h"
 #include "FSM/Components/CupComponent.h"
 #include "FSM/States/BrewingState.h"
@@ -28,10 +26,7 @@ Released under some license.
 
 FsmWithComponents senseoFsm;
 SenseoLed mySenseoLed(ocSenseLedPin);
-//SenseoSM mySenseoSM;
 SenseoControl myControl(ocPressPowerPin, ocPressLeftPin, ocPressRightPin);
-//Cup myCup(cupDetectorPin);
-//ezBuzzer myBuzzer(beeperPin);
 
 HomieNode senseoNode("machine", "senseo-wifi", "senseo-wifi");
 HomieSetting<bool> CupDetectorAvailableSetting("cupdetector", "Enable cup detection (TCRT5000)");
@@ -111,28 +106,6 @@ bool brewHandler(const HomieRange& range, const String& value) {
   return true;
 }
 
-/*void buzz(const String &value) {
-  if (value == "tone1") tone(beeperPin, 4096, 300);
-  if (value == "tone2") tone(beeperPin, 2048, 300);
-  if (value == "tone3") tone(beeperPin, 1536, 300);
-  if (value == "tone4") tone(beeperPin, 1024, 300);
-  if (value == "melody1") {
-    static int melody1[] = { NOTE_C7 };
-    static int noteDurations1[] = { 2 };
-    myBuzzer.playMelody(melody1, noteDurations1, sizeof(noteDurations1) / sizeof(int));
-  }
-  if (value == "melody2") {
-    static int melody2[] = { NOTE_E5, NOTE_E5, NOTE_F5, NOTE_C5 };
-    static int noteDurations2[] = { 4, 8, 8, 2 };
-    myBuzzer.playMelody(melody2, noteDurations2, sizeof(noteDurations2) / sizeof(int));
-  }
-  if (value == "melody3") {
-    static int melody3[] = { NOTE_C4, NOTE_C5 };
-    static int noteDurations3[] = { 4, 8 };
-    myBuzzer.playMelody(melody3, noteDurations3, sizeof(noteDurations3) / sizeof(int));
-  }
-}*/
-
 /**
 * Called by Homie upon an MQTT message to '.../buzzer'.
 */
@@ -150,58 +123,6 @@ bool buzzerHandler(const HomieRange& range, const String& value) {
     return false;
   }
 }
-
-/**
-* Senseo state machine, transition reaction: exit actions
-*/
-/*void senseoStateExitAction() {
-  senseoNode.setProperty("debug").send(
-    String("senseoState: Switching from ") + String(mySenseoSM.getStatePrevAsString())
-    + String(" to ") + String(mySenseoSM.getStateAsString())
-    + String(" after ") + String(mySenseoSM.getSecondsInLastState()) + String(" seconds")
-  );
-}*/
-
-/**
-* Senseo state machine, transition reaction: entry actions
-*/
-/*void senseoStateEntryAction() {
-  switch (mySenseoSM.getState()) {
-    case SENSEO_OFF: {
-      senseoNode.setProperty("brewedSize").send("0");
-      senseoNode.setProperty("power").send("false");
-      break;
-    }
-    case SENSEO_HEATING: {
-      break;
-    }
-    case SENSEO_READY: {
-      if (BuzzerSetting.get()) buzz("melody1");
-      break;
-    }
-    case SENSEO_BREWING: {
-      if (CupDetectorAvailableSetting.get()) {
-        if (myCup.isAvailable()) {
-          myCup.setFilling();
-        }
-        else {
-          senseoNode.setProperty("debug").send("cup: Brewing without detected cup, will not report the filling->full process.");
-        }
-      }
-      senseoNode.setProperty("brew").send("true");
-      senseoNode.setProperty("brewedSize").send("0");
-      break;
-    }
-    case SENSEO_NOWATER: {
-      if (BuzzerSetting.get()) buzz("melody2");
-      senseoNode.setProperty("outOfWater").send("true");
-      break;
-    }
-    case SENSEO_unknown: {
-      break;
-    }
-  }
-}*/
 
 void publishHomeAssistandDiscoveryConfig()
 {
@@ -338,8 +259,12 @@ void loopHandler() {
     if (true) Homie.getLogger() << "LED state machine, new LED state: " << mySenseoLed.getStateAsString() << endl;
   }
 
+  /**
+  * Update of the main state machine
+  */
   senseoFsm.update(millis());
 
+  //TODO : move that somewhere else, most likely in the Component update
   /**
   * Check and update the cup availability, based on the cup detector signal.
   * (no cup, cup available, cup full)
@@ -353,27 +278,13 @@ void loopHandler() {
     if (cupComponent->isFullChanged()) {
       senseoNode.setProperty("cupFull").send(cupComponent->isFull() ? "true" : "false");
     }
-  }
-
-  /**
-  * Update the higher level Senseo state machine based on the LED state.
-  * (off, heating, ready, brewing, no water)
-  */
-  /*mySenseoSM.updateState(mySenseoLed.getState());
-  if (mySenseoSM.stateHasChanged()) {
-    if (true) Homie.getLogger() << "Senseo state machine, new Senseo state: " << mySenseoSM.getStateAsString() << endl;
-    senseoNode.setProperty("opState").send(mySenseoSM.getStateAsString());
-
-    senseoStateExitAction();
-    senseoStateEntryAction();
-  }*/
+  }  
 
   /**
   * Non-blocking Low-High-Low transition.
   * Check for a simulated button press - release after > 100ms
   */
   myControl.releaseIfPressed();
-  //myBuzzer.loop();
 }
 
 void setup() {
@@ -400,8 +311,6 @@ void setup() {
 
   //pinMode(senseoButtonsInputPin, INPUT);  
 
-  Homie.getLogger() << endl << "A0 read :" << analogRead(senseoButtonsInputPin) << endl;
-
   /**
   * Testing routine. Activate only in development environemt.
   * Tests the circuit and Senseo connections, loops indefinitely.
@@ -418,7 +327,6 @@ void setup() {
   Homie_setBrand("SenseoWifi");
   //Homie.disableResetTrigger();
   Homie.disableLedFeedback();
-  //if (!UseCustomizableButtonsAddon.get()) Homie.setResetTrigger(resetButtonPin, LOW, 5000);
   Homie.setSetupFunction(setupHandler);
   Homie.setLoopFunction(loopHandler);
 

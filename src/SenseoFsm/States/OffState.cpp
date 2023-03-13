@@ -3,8 +3,8 @@
 #include "HeatingState.h"
 #include "NoWaterState.h"
 #include "ReadyState.h"
-#include "FSM/Components/BuzzerComponent.h"
-#include "FSM/Components/SenseoLedComponent.h"
+#include "SenseoFsm/Components/BuzzerComponent.h"
+#include "SenseoFsm/Components/SenseoLedComponent.h"
 
 void OffState::onEnter(StateId previousState) {
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,turnOff());

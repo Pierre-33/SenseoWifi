@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ezBuzzer.h>
-#include "FSM/FsmComponent.h"
+#include "SenseoFsm/FsmComponent.h"
 
 class BuzzerComponent : public  FsmComponent<BuzzerComponent>
 {

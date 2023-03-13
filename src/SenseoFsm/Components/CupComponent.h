@@ -5,7 +5,7 @@
 */
 #pragma once
 
-#include "FSM/FsmComponent.h"
+#include "SenseoFsm/FsmComponent.h"
 
 class CupComponent : public  FsmComponent<CupComponent>
 {

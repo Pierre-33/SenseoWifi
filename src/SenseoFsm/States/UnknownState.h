@@ -1,7 +1,7 @@
 #ifndef UnknownState_h
 #define UnknownState_h
 
-#include "FSM/FsmState.h"
+#include "SenseoFsm/FsmState.h"
 
 class SenseoLed;
 

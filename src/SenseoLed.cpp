@@ -19,7 +19,7 @@ void SenseoLed::pinStateToggled() {
   ledChanged = true;
 }
 
-int SenseoLed::getLastPulseDuration() {
+int SenseoLed::getLastPulseDuration() const{
   return (ledChangeMillis - prevLedChangeMillis);
 }
 
@@ -48,16 +48,16 @@ void SenseoLed::updateState() {
   }
 }
 
-bool SenseoLed::hasChanged() {
+bool SenseoLed::hasChanged() const {
   // did the LED state change during last updateState() execution?
   return (ledStatePrev != ledState);
 }
 
-ledStateEnum SenseoLed::getState() {
+ledStateEnum SenseoLed::getState() const {
   return ledState;
 }
 
-String SenseoLed::getStateAsString() {
+String SenseoLed::getStateAsString() const {
   if (ledState == LED_OFF) return "LED_OFF";
   else if (ledState == LED_SLOW) return "LED_SLOW";
   else if (ledState == LED_FAST) return "LED_FAST";

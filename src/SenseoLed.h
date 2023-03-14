@@ -15,11 +15,11 @@ class SenseoLed
   public:
     SenseoLed(int ledPin);
     void pinStateToggled();
-    int getLastPulseDuration();
+    int getLastPulseDuration() const;
     void updateState();
-    bool hasChanged();
-    ledStateEnum getState();
-    String getStateAsString();
+    bool hasChanged() const;
+    ledStateEnum getState() const;
+    String getStateAsString() const;
   private:
     int ocSenseLedPin;
     bool ledChanged = false;

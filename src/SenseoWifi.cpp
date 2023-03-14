@@ -12,18 +12,13 @@ Released under some license.
 #include "constants.h"
 #include "testIO.cpp"
 #include "HomeAssistant.h"
-#include "ModularFsm/ModularFsm.h"
-#include "SenseoFsm/Components/SenseoLedComponent.h"
+#include "SenseoFsm/SenseoFsm.h"
 #include "SenseoFsm/Components/BuzzerComponent.h"
 #include "SenseoFsm/Components/CupComponent.h"
-#include "SenseoFsm/States/BrewingState.h"
-#include "SenseoFsm/States/HeatingState.h"
-#include "SenseoFsm/States/NoWaterState.h"
-#include "SenseoFsm/States/OffState.h"
-#include "SenseoFsm/States/ReadyState.h"
-#include "SenseoFsm/States/UnknownState.h"
+#include "ModularFsm/FsmState.h"
 
-ModularFsm senseoFsm;
+
+SenseoFsm mySenseo;
 SenseoLed mySenseoLed(ocSenseLedPin);
 SenseoControl myControl(ocPressPowerPin, ocPressLeftPin, ocPressRightPin);
 
@@ -64,11 +59,11 @@ bool powerHandler(const HomieRange& range, const String& value) {
     return false;
   }
 
-  if (value == "true" && senseoFsm.isInState<OffState>()) {
+  if (value == "true" && mySenseo.isOff()) {
     myControl.pressPowerButton();
     senseoNode.setProperty("power").send("true");
   }
-  else if (value == "false" && !senseoFsm.isInState<OffState>()) {
+  else if (value == "false" && !mySenseo.isOff()) {
     myControl.pressPowerButton();
     senseoNode.setProperty("power").send("false");
   }
@@ -91,7 +86,7 @@ bool brewHandler(const HomieRange& range, const String& value) {
   }
 
   //TODO: move that in the FSM once I implemented a command patern
-  CupComponent * cupComponent = senseoFsm.getComponent<CupComponent>();
+  CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
   if (cupComponent != nullptr) {
     if (cupComponent->isNotAvailable() || cupComponent->isFull()) {
       senseoNode.setProperty("debug").send("brew: no or full cup present. Not executing.");
@@ -109,7 +104,7 @@ bool brewHandler(const HomieRange& range, const String& value) {
 * Called by Homie upon an MQTT message to '.../buzzer'.
 */
 bool buzzerHandler(const HomieRange& range, const String& value) {
-  BuzzerComponent * buzzerComponent = senseoFsm.getComponent<BuzzerComponent>();
+  BuzzerComponent * buzzerComponent = mySenseo.getComponent<BuzzerComponent>();
   if (buzzerComponent != nullptr) {
     senseoNode.setProperty("buzzer").send(value);
     bool success = buzzerComponent->buzz(value);
@@ -203,19 +198,20 @@ void setupHandler() {
   //senseoFsm.addComponent(std::make_unique<SenseoControl>(ocPressPowerPin, ocPressLeftPin, ocPressRightPin));
   //senseoFsm.addComponent(std::make_unique<SenseoInputButtons>(senseoButtonsInputPin));
   //senseoFsm.addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
-  if (BuzzerSetting.get()) senseoFsm.addComponent(std::make_unique<BuzzerComponent>(beeperPin));
-  if (CupDetectorAvailableSetting.get()) senseoFsm.addComponent(std::make_unique<CupComponent>(cupDetectorPin));
-  if (UseCustomizableButtonsAddon.get()) senseoFsm.addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
+  // if (BuzzerSetting.get()) senseoFsm.addComponent(std::make_unique<BuzzerComponent>(beeperPin));
+  // if (CupDetectorAvailableSetting.get()) senseoFsm.addComponent(std::make_unique<CupComponent>(cupDetectorPin));
+  // if (UseCustomizableButtonsAddon.get()) senseoFsm.addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
 
-  senseoFsm.addState(std::make_unique<BrewingState>(mySenseoLed,senseoNode));
-  senseoFsm.addState(std::make_unique<HeatingState>(mySenseoLed));
-  senseoFsm.addState(std::make_unique<NoWaterState>(mySenseoLed,senseoNode));
-  senseoFsm.addState(std::make_unique<OffState>(mySenseoLed,senseoNode));
-  senseoFsm.addState(std::make_unique<ReadyState>(mySenseoLed));
-  senseoFsm.addState(std::make_unique<UnknownState>(mySenseoLed));
-  senseoFsm.registerStateChangeHandler(onSenseoStateChange);
+  // senseoFsm.addState(std::make_unique<BrewingState>(mySenseoLed,senseoNode));
+  // senseoFsm.addState(std::make_unique<HeatingState>(mySenseoLed));
+  // senseoFsm.addState(std::make_unique<NoWaterState>(mySenseoLed,senseoNode));
+  // senseoFsm.addState(std::make_unique<OffState>(mySenseoLed,senseoNode));
+  // senseoFsm.addState(std::make_unique<ReadyState>(mySenseoLed));
+  // senseoFsm.addState(std::make_unique<UnknownState>(mySenseoLed));
+  mySenseo.setup(mySenseoLed,senseoNode,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),UseCustomizableButtonsAddon.get());
+  mySenseo.registerStateChangeHandler(onSenseoStateChange);
 
-  senseoFsm.setInitialState<UnknownState>();
+  // senseoFsm.setInitialState<UnknownState>();
 
   //configuring the button handler
   /*SenseoInputButtons * inputButtons = senseoFsm.getComponent<SenseoInputButtons>();
@@ -234,8 +230,9 @@ void setupHandler() {
 
   Homie.getLogger() << endl << "☕☕☕☕ Enjoy your SenseoWifi ☕☕☕☕" << endl << endl;
 
-  senseoNode.setProperty("opState").send(UnknownState::s_StateName);
-  CupComponent * cupComponent = senseoFsm.getComponent<CupComponent>();
+  //Do we really need that? The Fsm should properly send the information
+  //senseoNode.setProperty("opState").send(UnknownState::s_StateName);
+  CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
   if (cupComponent != nullptr) {
     senseoNode.setProperty("cupAvailable").send(cupComponent->isAvailable() ? "true" : "false");
     senseoNode.setProperty("cupFull").send(cupComponent->isFull() ? "true" : "false");
@@ -261,14 +258,14 @@ void loopHandler() {
   /**
   * Update of the main state machine
   */
-  senseoFsm.update(millis());
+  mySenseo.update(millis());
 
   //TODO : move that somewhere else, most likely in the Component update
   /**
   * Check and update the cup availability, based on the cup detector signal.
   * (no cup, cup available, cup full)
   */
- CupComponent * cupComponent = senseoFsm.getComponent<CupComponent>();
+ CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
   if (cupComponent != nullptr) {
     //myCup.updateState();
     if (cupComponent->isAvailableChanged()) {

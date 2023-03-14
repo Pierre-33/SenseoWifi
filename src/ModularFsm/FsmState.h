@@ -1,6 +1,6 @@
 #pragma once
 #include <ErriezCRC32.h>
-#include "FsmWithComponents.h"
+#include "ModularFsm.h"
 #include "FsmStateId.h"
 
 #define EXECUTE_IF_COMPONENT_EXIST(component,...) if (getComponent<component>() != nullptr) { getComponent<component>()->__VA_ARGS__; }
@@ -31,7 +31,7 @@ class FsmState
         template<class T> T * getComponent() { return myFsm->getComponent<T>(); };
 
     private:
-        friend class FsmWithComponents;
-        void initialize(FsmWithComponents * fsm);
-        FsmWithComponents * myFsm = nullptr;
+        friend class ModularFsm;
+        void initialize(ModularFsm * fsm);
+        ModularFsm * myFsm = nullptr;
 };

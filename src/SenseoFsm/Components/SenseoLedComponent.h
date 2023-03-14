@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FsmWithComponent/FsmComponent.h"
+#include "ModularFsm/FsmComponent.h"
 
 /**
  * SenseoLedComponent is use to control the Led of Senseo

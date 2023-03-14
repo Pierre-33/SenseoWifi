@@ -1,6 +1,6 @@
 #include "FsmState.h"
 
-void FsmState::initialize(FsmWithComponents * fsm)
+void FsmState::initialize(ModularFsm * fsm)
 {
     assert(fsm != nullptr);
     myFsm = fsm;

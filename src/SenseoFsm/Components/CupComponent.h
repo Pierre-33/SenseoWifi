@@ -5,7 +5,7 @@
 */
 #pragma once
 
-#include "FsmWithComponent/FsmComponent.h"
+#include "ModularFsm/FsmComponent.h"
 
 class CupComponent : public  FsmComponent<CupComponent>
 {

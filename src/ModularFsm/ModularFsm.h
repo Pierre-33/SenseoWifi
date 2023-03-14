@@ -14,7 +14,7 @@ class FsmState;
 
 typedef std::function<void (FsmState * prevState, FsmState * newState)> StateChangeHandler;
 
-class FsmWithComponents
+class ModularFsm
 {
     public: 
         template<class T> 

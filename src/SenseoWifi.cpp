@@ -12,7 +12,7 @@ Released under some license.
 #include "constants.h"
 #include "testIO.cpp"
 #include "HomeAssistant.h"
-#include "FsmWithComponent/FsmWithComponents.h"
+#include "ModularFsm/ModularFsm.h"
 #include "SenseoFsm/Components/SenseoLedComponent.h"
 #include "SenseoFsm/Components/BuzzerComponent.h"
 #include "SenseoFsm/Components/CupComponent.h"
@@ -23,7 +23,7 @@ Released under some license.
 #include "SenseoFsm/States/ReadyState.h"
 #include "SenseoFsm/States/UnknownState.h"
 
-FsmWithComponents senseoFsm;
+ModularFsm senseoFsm;
 SenseoLed mySenseoLed(ocSenseLedPin);
 SenseoControl myControl(ocPressPowerPin, ocPressLeftPin, ocPressRightPin);
 

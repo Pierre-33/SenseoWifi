@@ -1,5 +1,5 @@
 #pragma once
-#include "FsmWithComponent/FsmState.h"
+#include "ModularFsm/FsmState.h"
 
 class SenseoLed;
 

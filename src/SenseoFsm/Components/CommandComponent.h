@@ -25,7 +25,7 @@ class CommandComponent : public  FsmComponent<CommandComponent>
 
         void sendCommands(CommandBitFields newCommands) { commands = newCommands; updateSenseoNode(); }
         void clearCommand(CommandBitFields commandsToClear) { commands &= ~commandsToClear; updateSenseoNode(); }
-        bool hasCommand(Command command) const { return hasCommand(command); }
+        bool hasCommand(Command command) const { return hasCommand(commands,command); }
         static bool hasCommand(CommandBitFields commands, Command command) { return (commands & command) == command; }
         bool hasAnyCommands(CommandBitFields command) const { return (commands & command) != 0; }
         CommandBitFields getCommands() const { return commands; }

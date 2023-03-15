@@ -21,6 +21,9 @@ bool SenseoState::hasOffCommands()
 
 void SenseoState::clearCommands(CommandComponent::CommandBitFields commands) 
 { 
-    Homie.getLogger() << getStateName() << ": Clearing commands " << commandComponent->getCommandsAsString(commands & commandComponent->getCommands()) << endl;
+    if ((commands & commandComponent->getCommands()) != 0)
+    {
+        Homie.getLogger() << getStateName() << ": Clearing commands " << commandComponent->getCommandsAsString(commands & commandComponent->getCommands()) << endl;
+    }
     commandComponent->clearCommand(commands); 
 }

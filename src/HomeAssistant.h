@@ -1,6 +1,4 @@
-#ifndef HomeAssistant_h
-#define HomeAssistant_h
-
+#pragma once
 #include <Homie.h>
 
 /**
@@ -28,5 +26,3 @@ class HomeAssistantDiscovery
     String availabilityTopic;
     String uniqueIdBase;
 };
-
-#endif

@@ -7,7 +7,6 @@ Released under some license.
 #include <Homie.h>
 
 #include "SenseoLed.h"
-#include "SenseoControl.h"
 #include "pins.h"
 #include "constants.h"
 #include "testIO.cpp"
@@ -17,16 +16,14 @@ Released under some license.
 #include "SenseoFsm/Components/CupComponent.h"
 #include "ModularFsm/FsmState.h"
 
-
-SenseoFsm mySenseo;
-SenseoLed mySenseoLed(ocSenseLedPin);
-SenseoControl myControl(ocPressPowerPin, ocPressLeftPin, ocPressRightPin);
-
 HomieNode senseoNode("machine", "senseo-wifi", "senseo-wifi");
 HomieSetting<bool> CupDetectorAvailableSetting("cupdetector", "Enable cup detection (TCRT5000)");
 HomieSetting<bool> BuzzerSetting("buzzer", "Enable buzzer sounds (no water, cup finished, ...)");
 HomieSetting<bool> PublishHomeAssistantDiscoveryConfig("homeassistantautodiscovery", "Publish HomeAssistant discovery config, ...)");
 HomieSetting<bool> UseCustomizableButtonsAddon("usecustomizablebuttonsaddon", "Use the additional pcb to customize button behavior, ...)");
+
+SenseoFsm mySenseo(senseoNode);
+SenseoLed mySenseoLed(ocSenseLedPin);
 
 /**
 * Called by the LED changed interrupt
@@ -35,39 +32,30 @@ void IRAM_ATTR ledChangedHandler() {
   mySenseoLed.pinStateToggled();
 }
 
-void onSenseoStateChange(FsmState * prevState, FsmState * nextState) {
-  if (true) Homie.getLogger() << "Senseo state machine, new Senseo state: " << nextState->getStateName() << endl;
-  
-  senseoNode.setProperty("opState").send(nextState->getStateName());
-  if (prevState != nullptr) {
-    int secondInPrevState = (prevState->getTimeInState() + 500) / 1000;
-    senseoNode.setProperty("debug").send(
-      String("senseoState: Switching from ") + String(prevState->getStateName())
-      + String(" to ") + String(nextState->getStateName())
-      + String(" after ") + String(secondInPrevState) + String(" seconds")
-    );
-  }
-}
-
 /**
 * Called by Homie upon an MQTT message to '.../power'
 * MQTT response is sent from this routine, as pessimistic feedback from state machine is too slow and triggers a timeout in e.g. Home Assistant.
 */
-bool powerHandler(const HomieRange& range, const String& value) {
-  if (value != "true" && value !="false" && value != "reset") {
+bool powerHandler(const HomieRange& range, const String& value) 
+{
+  if (value != "true" && value !="false" && value != "reset") 
+  {
     senseoNode.setProperty("debug").send("power: malformed message content. Allowed: [true,false,reset].");
     return false;
   }
 
-  if (value == "true" && mySenseo.isOff()) {
-    myControl.pressPowerButton();
+  if (value == "true" && mySenseo.isOff()) 
+  {
+    mySenseo.sendCommands(CommandComponent::TurnOn);
     senseoNode.setProperty("power").send("true");
   }
-  else if (value == "false" && !mySenseo.isOff()) {
-    myControl.pressPowerButton();
+  else if (value == "false" && !mySenseo.isOff()) 
+  {
+    mySenseo.sendCommands(CommandComponent::TurnOff);
     senseoNode.setProperty("power").send("false");
   }
-  else if (value == "reset") {
+  else if (value == "reset") 
+  {
     senseoNode.setProperty("power").send("false");
     tone(beeperPin, 4096, 8000);
     Homie.reset();
@@ -79,24 +67,36 @@ bool powerHandler(const HomieRange& range, const String& value) {
 * Called by Homie upon an MQTT message to '.../brew'.
 * No MQTT response is sent from this routine, as pessimistic feedback will be handled in the state machine.
 */
-bool brewHandler(const HomieRange& range, const String& value) {
-  if (value != "1cup" && value !="2cup" && value !="descale") {
+bool brewHandler(const HomieRange& range, const String& value) 
+{
+  if (value != "1cup" && value !="2cup" && value !="descale") 
+  {
     senseoNode.setProperty("debug").send("brew: malformed message content. Allowed: [1cup,2cup,descale].");
     return false;
   }
 
   //TODO: move that in the FSM once I implemented a command patern
   CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
-  if (cupComponent != nullptr) {
-    if (cupComponent->isNotAvailable() || cupComponent->isFull()) {
+  if (cupComponent != nullptr) 
+  {
+    if (cupComponent->isNotAvailable() || cupComponent->isFull()) 
+    {
       senseoNode.setProperty("debug").send("brew: no or full cup present. Not executing.");
       return false;
     }
   }
 
-  if (value == "1cup") myControl.pressLeftButton();
-  else if (value == "2cup") myControl.pressRightButton();
-  else if (value == "descale") myControl.pressLeftRightButton();
+  if (value == "1cup" or value == "2cup")
+  {
+    CommandComponent::CommandBitFields commands = value == "1cup" ? CommandComponent::Brew1Cup : CommandComponent::Brew2Cup;
+    if (mySenseo.isOff()) commands |= CommandComponent::TurnOn | CommandComponent::TurnOffAfterBrewing;
+    mySenseo.sendCommands(commands);
+  }
+  else if (value == "descale") 
+  {
+    assert(!"not implemented");
+    //myControl.pressLeftRightButton();
+  }
   return true;
 }
 
@@ -127,7 +127,8 @@ void publishHomeAssistandDiscoveryConfig()
     bool success = ha.publishBinarySensorConfig("Out Of Water","outOfWater",{{"icon", "mdi:water-off-outline"},{"device_class","problem"}});    
     Homie.getLogger() << "OutOfWater: " << (success ? "success" : "failed") << endl;
 
-    if (CupDetectorAvailableSetting.get()) {
+    if (CupDetectorAvailableSetting.get()) 
+    {
         success = ha.publishBinarySensorConfig("Cup Available","cupAvailable",{{"icon", "mdi:coffee-outline"}});    
         Homie.getLogger() << "cupAvailable: " << (success ? "success" : "failed") << endl;
 
@@ -170,8 +171,10 @@ void publishHomeAssistandDiscoveryConfig()
 * The device rebooted when attachInterrupt was called in setup()
 * before Wifi was connected and interrupts were already coming in.
 */
-void onHomieEvent(const HomieEvent &event) {
-  switch (event.type) {
+void onHomieEvent(const HomieEvent &event) 
+{
+  switch (event.type) 
+  {
   case HomieEventType::WIFI_CONNECTED:
     attachInterrupt(digitalPinToInterrupt(ocSenseLedPin), ledChangedHandler, CHANGE);
     break;
@@ -181,7 +184,8 @@ void onHomieEvent(const HomieEvent &event) {
   default:
     break;
   case HomieEventType::MQTT_READY:
-    if (PublishHomeAssistantDiscoveryConfig.get()) {
+    if (PublishHomeAssistantDiscoveryConfig.get()) 
+    {
       publishHomeAssistandDiscoveryConfig();
     }
     break;
@@ -194,24 +198,7 @@ void onHomieEvent(const HomieEvent &event) {
 */
 void setupHandler() {
   // configuring the state machine
-  //senseoFsm.addComponent(std::make_unique<SenseoCommands>());
-  //senseoFsm.addComponent(std::make_unique<SenseoControl>(ocPressPowerPin, ocPressLeftPin, ocPressRightPin));
-  //senseoFsm.addComponent(std::make_unique<SenseoInputButtons>(senseoButtonsInputPin));
-  //senseoFsm.addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
-  // if (BuzzerSetting.get()) senseoFsm.addComponent(std::make_unique<BuzzerComponent>(beeperPin));
-  // if (CupDetectorAvailableSetting.get()) senseoFsm.addComponent(std::make_unique<CupComponent>(cupDetectorPin));
-  // if (UseCustomizableButtonsAddon.get()) senseoFsm.addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
-
-  // senseoFsm.addState(std::make_unique<BrewingState>(mySenseoLed,senseoNode));
-  // senseoFsm.addState(std::make_unique<HeatingState>(mySenseoLed));
-  // senseoFsm.addState(std::make_unique<NoWaterState>(mySenseoLed,senseoNode));
-  // senseoFsm.addState(std::make_unique<OffState>(mySenseoLed,senseoNode));
-  // senseoFsm.addState(std::make_unique<ReadyState>(mySenseoLed));
-  // senseoFsm.addState(std::make_unique<UnknownState>(mySenseoLed));
-  mySenseo.setup(mySenseoLed,senseoNode,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),UseCustomizableButtonsAddon.get());
-  mySenseo.registerStateChangeHandler(onSenseoStateChange);
-
-  // senseoFsm.setInitialState<UnknownState>();
+  mySenseo.setup(mySenseoLed,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),UseCustomizableButtonsAddon.get());
 
   //configuring the button handler
   /*SenseoInputButtons * inputButtons = senseoFsm.getComponent<SenseoInputButtons>();
@@ -266,7 +253,8 @@ void loopHandler() {
   * (no cup, cup available, cup full)
   */
  CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
-  if (cupComponent != nullptr) {
+  if (cupComponent != nullptr) 
+  {
     //myCup.updateState();
     if (cupComponent->isAvailableChanged()) {
       senseoNode.setProperty("cupAvailable").send(cupComponent->isAvailable() ? "true" : "false");
@@ -275,12 +263,6 @@ void loopHandler() {
       senseoNode.setProperty("cupFull").send(cupComponent->isFull() ? "true" : "false");
     }
   }  
-
-  /**
-  * Non-blocking Low-High-Low transition.
-  * Check for a simulated button press - release after > 100ms
-  */
-  myControl.releaseIfPressed();
 }
 
 void setup() {
@@ -289,6 +271,8 @@ void setup() {
   /**
   * Wemos D1 mini pin initializations
   */
+
+  //TODO: move those initialization in their respective component
   pinMode(ocPressLeftPin, OUTPUT);
   pinMode(ocPressRightPin, OUTPUT);
   pinMode(ocPressPowerPin, OUTPUT);
@@ -301,7 +285,8 @@ void setup() {
   pinMode(beeperPin, OUTPUT);
 
   // it seems at this point Homie configuration variable are not set
-  if (CupDetectorAvailableSetting.get()) {
+  if (CupDetectorAvailableSetting.get()) 
+  {
     pinMode(cupDetectorPin, INPUT_PULLUP); 
   }
 
@@ -338,6 +323,7 @@ void setup() {
   * Homie: Advertise custom SenseoWifi MQTT topics
   */
   senseoNode.advertise("debug").setName("Debugging Information").setDatatype("string").setRetained(false);
+  senseoNode.advertise("commands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
   senseoNode.advertise("opState").setName("Operational State").setDatatype("enum").setFormat("SENSEO_unknown,SENSEO_OFF,SENSEO_HEATING,SENSEO_READY,SENSEO_BREWING,SENSEO_NOWATER");
   senseoNode.advertise("power").setName("Power").setDatatype("boolean").settable(powerHandler);
   senseoNode.advertise("brew").setName("Brew").settable(brewHandler).setDatatype("enum").setFormat("1cup,2cup");
@@ -352,17 +338,19 @@ void setup() {
   Homie.setup();
 
   //TODO: test if I can move all setup things in the setup handler
-  if (UseCustomizableButtonsAddon.get()) {
-    Homie.getLogger() << "Shuting down the led" << endl;
+  if (UseCustomizableButtonsAddon.get()) 
+  {
     pinMode(senseoLedOutPin, OUTPUT);  
     digitalWrite(senseoLedOutPin, LOW);
   }
-  else {
+  else 
+  {
     pinMode(resetButtonPin, INPUT_PULLUP);
     Homie.setResetTrigger(resetButtonPin, LOW, 5000);
   }
 }
 
-void loop() {
-  Homie.loop();
+void loop() 
+{
+    Homie.loop();
 }

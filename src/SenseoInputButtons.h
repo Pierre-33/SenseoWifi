@@ -29,7 +29,8 @@ class SenseoInputButtons
     void update();
 
   private:
-    enum HandlerType {
+    enum HandlerType 
+    {
       ON_PUSH,
       ON_HOLD,
       ON_RELEASE,

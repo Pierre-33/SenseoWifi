@@ -2,26 +2,29 @@
 #include "FsmComponent.h"
 #include "FsmState.h"
 
-void ModularFsm::update(unsigned long currentTime) {
+void ModularFsm::update(unsigned long currentTime) 
+{
     lastUpdateMillis = currentTime;
     updateComponents();
     updateFsm();
 }
 
-void ModularFsm::updateComponents() {
-    for(auto & component: components) {
+void ModularFsm::updateComponents() 
+{
+    for(auto & component: components) 
+    {
         component.second->update();
     }
 }
 
-void ModularFsm::updateFsm() {
-    if (nextState != nullptr) {
+void ModularFsm::updateFsm() 
+{
+    if (nextState != nullptr) 
+    {
         if (currentState != nullptr) currentState->onExit(nextState->getStateId());
         
-        //call state change handlers
-        for (const auto & handler: stateChangeHandlers) {
-            handler(currentState,nextState);
-        }
+        //call state change cb
+        onStateChange(currentState,nextState);
 
         lastStateChangeMillis = lastUpdateMillis;
         nextState->onEnter(currentState ? currentState->getStateId() : INVALID_FSM_CLASS_ID);
@@ -32,7 +35,8 @@ void ModularFsm::updateFsm() {
     if (currentState != nullptr) currentState->onUpdate();
 }
 
-void ModularFsm::changeState(StateId stateId) {
+void ModularFsm::changeState(StateId stateId) 
+{
     if (currentState != nullptr && currentState->getStateId() != stateId) {
         if (nextState == nullptr || nextState->getStateId() != stateId) {
             nextState = states[stateId].get();
@@ -40,16 +44,13 @@ void ModularFsm::changeState(StateId stateId) {
     }
 }
 
-bool ModularFsm::isInState(StateId stateId) const {
+bool ModularFsm::isInState(StateId stateId) const 
+{
     return stateId == currentState->getStateId(); 
 }
 
-void ModularFsm::setInitialState(StateId stateId) {
+void ModularFsm::setInitialState(StateId stateId) 
+{
     assert(currentState == nullptr);
     nextState = states[stateId].get();
-}
-
-void ModularFsm::registerStateChangeHandler(const StateChangeHandler &handler)
-{
-    stateChangeHandlers.push_back(handler);
 }

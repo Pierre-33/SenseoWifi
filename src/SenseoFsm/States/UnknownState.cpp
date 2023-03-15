@@ -6,11 +6,14 @@
 #include "OffState.h"
 #include "../Components/SenseoLedComponent.h"
 
-void UnknownState::onEnter(StateId previousState) {
+void UnknownState::onEnter(StateId previousState) 
+{
+    clearCommands(CommandComponent::All);
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(200,1000));
 }
 
-void UnknownState::onUpdate() {
+void UnknownState::onUpdate() 
+{
     ledStateEnum ledState = senseoLed.getState();
 
     if (ledState == LED_OFF)  changeState<OffState>();

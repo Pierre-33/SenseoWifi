@@ -7,10 +7,12 @@
 
 #include "ModularFsm/FsmComponent.h"
 
+class HomieNode;
+
 class CupComponent : public  FsmComponent<CupComponent>
 {
   public:
-    CupComponent(int pin);
+    CupComponent(HomieNode & node, int pin);
     void update();
     void setFilling();
     void setFull();
@@ -22,6 +24,7 @@ class CupComponent : public  FsmComponent<CupComponent>
     bool isFull();
     bool isEmpty();
   private:
+    HomieNode & senseoNode;
     int detectorPin;
     bool lastChangeValue = false;
     unsigned long lastChangeMillis = 0;

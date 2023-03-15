@@ -1,5 +1,6 @@
 #pragma once
 #include "ModularFsm/ModularFsm.h"
+#include "Components/CommandComponent.h"
 
 class SenseoLed;
 class HomieNode;
@@ -7,6 +8,14 @@ class HomieNode;
 class SenseoFsm : public ModularFsm
 {
     public:
-        void setup(const SenseoLed & led, HomieNode & node,bool useCupDetector, bool useBuzzer, bool useCustomizableButton);
+        SenseoFsm(HomieNode & node) : ModularFsm() , senseoNode(node) {}
+        void setup(const SenseoLed & led,bool useCupDetector, bool useBuzzer, bool useCustomizableButton);
         bool isOff();
+
+        bool sendCommands(CommandComponent::CommandBitFields commands);
+
+        void onStateChange(FsmState * prevState, FsmState * nextState) override;
+
+    protected:
+        HomieNode & senseoNode;
 };

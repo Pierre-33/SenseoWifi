@@ -18,37 +18,38 @@ class ModularFsm
 {
     public: 
         template<class T> 
-        bool addComponent(std::unique_ptr<T> && component){
+        bool addComponent(std::unique_ptr<T> && component)
+        {
             static_assert(std::is_base_of<BaseFsmComponent,T>::value, "T must derive from BaseFsmComponent");
             FsmComponentId classId = T::getClassId();
             if (components.find(classId) != components.end()) return false;
-            else {
+            else 
+            {
                 components[classId] = std::move(component);
                 return true;
             }
         }
 
         template<class T> 
-        bool addState(std::unique_ptr<T> && state){
+        bool addState(std::unique_ptr<T> && state)
+        {
             static_assert(std::is_base_of<FsmState,T>::value, "T must derive from FsmState");
             StateId stateId = T::s_StateId;
             if (states.find(stateId) != states.end()) return false;
-            else {
+            else 
+            {
                 state->initialize(this);
                 states[stateId] = std::move(state);
                 return true;
             }
         }
 
-        template<class T> T * getComponent() {
+        template<class T> T * getComponent() 
+        {
             auto iter = components.find(T::getClassId());
             if (iter != components.end()) return (T*)iter->second.get();
             else return nullptr;
         }
-
-        // The function will be call after the prevState->OnExit() and before nextState->onEntry()
-        // Calling prevState->getTimeInState() will properly return the time spend in that state
-        void registerStateChangeHandler(const StateChangeHandler &handler);
         
         void update(unsigned long currentTime);
 
@@ -59,7 +60,11 @@ class ModularFsm
         template <class T> bool isInState() const { return isInState(T::s_StateId); }
         unsigned long getTimeInState() const { return lastUpdateMillis - lastStateChangeMillis; }
 
-    private:
+        // The method will be call after the prevState->OnExit() and before nextState->onEntry()
+        // Calling prevState->getTimeInState() will properly return the time spend in that state
+        virtual void onStateChange(FsmState * prevState, FsmState * nextState) {};
+
+    protected:
         friend class FsmState;
         void changeState(StateId classId); //changeState should not be called from outside a state
 
@@ -71,7 +76,6 @@ class ModularFsm
 
         FsmState * currentState = nullptr;
         FsmState * nextState = nullptr;
-        std::vector<StateChangeHandler> stateChangeHandlers;
 
         std::map<FsmComponentId,std::unique_ptr<BaseFsmComponent>> components;
         std::map<StateId,std::unique_ptr<FsmState>> states;

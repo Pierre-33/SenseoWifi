@@ -10,75 +10,90 @@ Released under some license.
 #include "constants.h"
 
 
-CupComponent::CupComponent(int pin)
+CupComponent::CupComponent(HomieNode & node, int pin)
+: senseoNode(node), detectorPin(pin)
 {
-  detectorPin = pin;
   cupAvailable = !digitalRead(detectorPin);
 }
 
-void CupComponent::update() {
+void CupComponent::update() 
+{
   bool value = !digitalRead(detectorPin);
   //debounce
-  if (value != lastChangeValue) {
+  if (value != lastChangeValue) 
+  {
     lastChangeValue = value;
     lastChangeMillis = millis();
   }
   if (millis() - lastChangeMillis <= CupDebounceInterval) return;
   // process debounced detector reading
-  if (value != cupAvailable) {
+  if (value != cupAvailable) 
+  {
     cupAvailable = value;
     cupFilling = false;
     availableChanged = true;
-    if (cupAvailable || (!cupAvailable && cupFull)) {
+    if (cupAvailable || (!cupAvailable && cupFull)) 
+    {
       cupFull = false;
       fullChanged = true;
     }
   }
 }
 
-void CupComponent::setFilling() {
+void CupComponent::setFilling() 
+{
   cupFilling = true;
   cupFull = false;
 }
 
-void CupComponent::setFull() {
+void CupComponent::setFull() 
+{
   cupFilling = false;
   cupFull = true;
   fullChanged = true;
 }
 
-bool CupComponent::isAvailableChanged() {
-  if (availableChanged) {
+bool CupComponent::isAvailableChanged() 
+{
+  if (availableChanged) 
+  {
     availableChanged = false;
     return true;
   };
   return false;
 }
 
-bool CupComponent::isFullChanged() {
-  if (fullChanged) {
+bool CupComponent::isFullChanged() 
+{
+  if (fullChanged) 
+  {
     fullChanged = false;
     return true;
   };
   return false;
 }
 
-bool CupComponent::isAvailable() {
+bool CupComponent::isAvailable() 
+{
   return cupAvailable;
 }
 
-bool CupComponent::isNotAvailable() {
+bool CupComponent::isNotAvailable() 
+{
   return !cupAvailable;
 }
 
-bool CupComponent::isFilling() {
+bool CupComponent::isFilling() 
+{
   return cupFilling;
 }
 
-bool CupComponent::isFull() {
+bool CupComponent::isFull() 
+{
   return cupFull;
 }
 
-bool CupComponent::isEmpty() {
+bool CupComponent::isEmpty() 
+{
   return !cupFull;
 }

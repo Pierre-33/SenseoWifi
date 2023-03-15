@@ -230,7 +230,7 @@ void setupHandler() {
 
   Homie.getLogger() << endl << "☕☕☕☕ Enjoy your SenseoWifi ☕☕☕☕" << endl << endl;
 
-  //Do we really need that? The Fsm should properly send the information
+  //Do we really need that? The Fsm should properly send the information on it's first update
   //senseoNode.setProperty("opState").send(UnknownState::s_StateName);
   CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
   if (cupComponent != nullptr) {

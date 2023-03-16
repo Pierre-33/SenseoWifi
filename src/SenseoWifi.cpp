@@ -5,6 +5,7 @@ Released under some license.
 */
 
 #include <Homie.h>
+#include <memory>
 
 #include "SenseoLed.h"
 #include "pins.h"
@@ -15,6 +16,7 @@ Released under some license.
 #include "SenseoFsm/Components/BuzzerComponent.h"
 #include "SenseoFsm/Components/CupComponent.h"
 #include "ModularFsm/FsmState.h"
+#include "SenseoInputButtons.h"
 
 HomieNode senseoNode("machine", "senseo-wifi", "senseo-wifi");
 HomieSetting<bool> CupDetectorAvailableSetting("cupdetector", "Enable cup detection (TCRT5000)");
@@ -24,6 +26,7 @@ HomieSetting<bool> UseCustomizableButtonsAddon("usecustomizablebuttonsaddon", "U
 
 SenseoFsm mySenseo(senseoNode);
 SenseoLed mySenseoLed(ocSenseLedPin);
+std::unique_ptr<SenseoInputButtons> myInputbuttons;
 
 /**
 * Called by the LED changed interrupt
@@ -86,7 +89,7 @@ bool brewHandler(const HomieRange& range, const String& value)
     }
   }
 
-  if (value == "1cup" or value == "2cup")
+  if (value == "1cup" || value == "2cup")
   {
     CommandComponent::CommandBitFields commands = value == "1cup" ? CommandComponent::Brew1Cup : CommandComponent::Brew2Cup;
     if (mySenseo.isOff()) commands |= CommandComponent::TurnOn | CommandComponent::TurnOffAfterBrewing;
@@ -193,6 +196,19 @@ void onHomieEvent(const HomieEvent &event)
   }
 }
 
+void brewCup(CommandComponent::Command command)
+{
+  CommandComponent::CommandBitFields commands = command;
+  if (mySenseo.isOff()) commands |= CommandComponent::TurnOn | CommandComponent::TurnOffAfterBrewing;
+  mySenseo.sendCommands(commands);
+}
+
+void togglePower()
+{
+  if (mySenseo.isOff()) mySenseo.sendCommands(CommandComponent::TurnOn);
+  else mySenseo.sendCommands(CommandComponent::TurnOff);
+}
+
 /**
 *
 */
@@ -201,17 +217,18 @@ void setupHandler() {
   mySenseo.setup(mySenseoLed,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),UseCustomizableButtonsAddon.get());
 
   //configuring the button handler
-  /*SenseoInputButtons * inputButtons = senseoFsm.getComponent<SenseoInputButtons>();
-  if (inputButtons != nullptr) {
-    inputButtons->addButtonReleaseHandler(A0buttonPwr,50,[]() { myControl.pressPowerButton(); });
-    inputButtons->addButtonReleaseHandler(A0buttonPwr,4000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
-    inputButtons->addButtonReleaseHandler(A0buttonPwr,2000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
-    inputButtons->addButtonHoldHandler(A0buttonPwr,2000,[]() { buzz("tone2"); });
-    inputButtons->addButtonHoldHandler(A0buttonPwr,3000,[]() { buzz("tone2"); });
-    inputButtons->addButtonHoldHandler(A0buttonPwr,4000,[]() { buzz("reset"); });
-    inputButtons->addButtonReleaseHandler(A0button1Cup,50,[]() { myControl.pressLeftButton(); });
-    inputButtons->addButtonReleaseHandler(A0button2Cup,50,[]() { myControl.pressRightButton(); });
-  }*/
+  if (UseCustomizableButtonsAddon.get())
+  {
+    myInputbuttons = std::make_unique<SenseoInputButtons>(senseoButtonsInputPin);
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,50,togglePower);
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,4000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,2000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
+    //myInputbuttons->addButtonHoldHandler(A0buttonPwr,2000,[]() { buzz("tone2"); });
+    //myInputbuttons->addButtonHoldHandler(A0buttonPwr,3000,[]() { buzz("tone2"); });
+    //myInputbuttons->addButtonHoldHandler(A0buttonPwr,4000,[]() { buzz("reset"); });
+    myInputbuttons->addButtonReleaseHandler(A0button1Cup,50,[]() { brewCup(CommandComponent::Brew1Cup); });
+    myInputbuttons->addButtonReleaseHandler(A0button2Cup,50,[]() { brewCup(CommandComponent::Brew2Cup); });
+  }
 
   if (BuzzerSetting.get()) tone(beeperPin, 2048, 500);
 
@@ -238,9 +255,12 @@ void loopHandler() {
   * (off, slow blinking, fast blinking, on)
   */
   mySenseoLed.updateState();
-  if (mySenseoLed.hasChanged()) {
+  if (mySenseoLed.hasChanged()) 
+  {
     if (true) Homie.getLogger() << "LED state machine, new LED state: " << mySenseoLed.getStateAsString() << endl;
   }
+
+  if (myInputbuttons) myInputbuttons->update();
 
   /**
   * Update of the main state machine

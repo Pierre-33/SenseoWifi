@@ -27,13 +27,9 @@ void BrewingState::onUpdate()
     ledStateEnum ledState = senseoLed.getState();
 
     if (ledState == LED_OFF)  changeState<OffState>();
-    else if (hasOffCommands()) 
-    {
-        Homie.getLogger() << "Turning Off" << endl;
-        controlComponent->pressPowerButton();
-    }
+    else if (hasOffCommands()) processOffCommands();
     else if (ledState == LED_FAST) changeState<NoWaterState>();
-    else if (ledState == LED_ON) changeState<ReadyState>();
+    else if (ledState == LED_ON && getTimeInState() > 5000) changeState<ReadyState>();
 }
 
 void BrewingState::onExit(StateId nextState) 

@@ -41,6 +41,12 @@ bool SenseoFsm::sendCommands(CommandComponent::CommandBitFields commands)
     CommandComponent * commandComponent = getComponent<CommandComponent>();
     if (commandComponent != nullptr && currentState != nullptr)
     {
+        if ((commandComponent->hasCommand(commands,CommandComponent::Brew1Cup) || commandComponent->hasCommand(commands,CommandComponent::Brew2Cup)) && isInState<BrewingState>())
+        {
+          Homie.getLogger() << "Commands " << commandComponent->getCommandsAsString(commands) << " rejected because we are already brewing" << endl;
+          return false;
+        }
+
         Homie.getLogger() << currentState->getStateName() << ": Sending commands " << commandComponent->getCommandsAsString(commands) << endl;
         commandComponent->sendCommands(commands);
         return true;

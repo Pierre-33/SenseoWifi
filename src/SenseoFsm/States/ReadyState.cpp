@@ -19,11 +19,7 @@ void ReadyState::onUpdate()
     ledStateEnum ledState = senseoLed.getState();
 
     if (ledState == LED_OFF)  changeState<OffState>();
-    else if (hasOffCommands()) 
-    {
-        Homie.getLogger() << "Turning Off" << endl;
-        controlComponent->pressPowerButton();
-    }
+    else if (hasOffCommands()) processOffCommands();
     else if (ledState == LED_SLOW) changeState<BrewingState>(); //TODO overload this state and remove this statement when the Button addon is used
     else if (ledState == LED_FAST) changeState<NoWaterState>();
     else if (hasPendingCommands(CommandComponent::Brew1Cup))

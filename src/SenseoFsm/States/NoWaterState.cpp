@@ -20,11 +20,7 @@ void NoWaterState::onUpdate()
     ledStateEnum ledState = senseoLed.getState();
 
     if (ledState == LED_SLOW) changeState<HeatingState>();
-    else if (hasOffCommands()) 
-    {
-        Homie.getLogger() << "Turning Off" << endl;
-        controlComponent->pressPowerButton();
-    }
+    else if (hasOffCommands()) processOffCommands();
     else if (ledState == LED_ON) changeState<ReadyState>();
     else if (ledState == LED_OFF)  changeState<OffState>();
 }

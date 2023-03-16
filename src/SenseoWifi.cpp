@@ -324,7 +324,7 @@ void setup() {
   */
   senseoNode.advertise("debug").setName("Debugging Information").setDatatype("string").setRetained(false);
   senseoNode.advertise("pendingCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
-  senseoNode.advertise("ProcessedCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
+  senseoNode.advertise("processedCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
   senseoNode.advertise("opState").setName("Operational State").setDatatype("enum").setFormat("SENSEO_unknown,SENSEO_OFF,SENSEO_HEATING,SENSEO_READY,SENSEO_BREWING,SENSEO_NOWATER");
   senseoNode.advertise("power").setName("Power").setDatatype("boolean").settable(powerHandler);
   senseoNode.advertise("brew").setName("Brew").settable(brewHandler).setDatatype("enum").setFormat("1cup,2cup");

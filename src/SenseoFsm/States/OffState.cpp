@@ -25,7 +25,6 @@ void OffState::onUpdate()
     else if (ledState == LED_ON) changeState<ReadyState>();
     else if (hasPendingCommands(CommandComponent::TurnOn))
     {
-        Homie.getLogger() << "Turning On" << endl;
         controlComponent->pressPowerButton();
         processCommands(CommandComponent::TurnOn);
     }

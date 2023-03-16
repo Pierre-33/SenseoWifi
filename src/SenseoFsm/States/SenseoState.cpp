@@ -14,16 +14,27 @@ void SenseoState::onInitialized()
 bool SenseoState::hasOffCommands() const
 {
     if (commandComponent->hasPendingCommands(CommandComponent::TurnOff)) return true;
-    else if (commandComponent->hasPendingCommands(CommandComponent::TurnOffAfterBrewing) && commandComponent->hasPendingCommands(CommandComponent::Brew1Cup | CommandComponent::Brew2Cup) == false) return true;
+    else if (commandComponent->hasPendingCommands(CommandComponent::TurnOffAfterBrewing))
+    {
+        if (commandComponent->hasPendingCommands(CommandComponent::Brew1Cup | CommandComponent::Brew2Cup)) return false;
+        else if (commandComponent->hasProcessedCommands(CommandComponent::Brew1Cup | CommandComponent::Brew2Cup)) return false;
+        else return true;
+    }
 
     return false;
 }
 
+void SenseoState::processOffCommands()
+{
+    controlComponent->pressPowerButton();
+    processCommands(CommandComponent::TurnOff | CommandComponent::TurnOffAfterBrewing);
+}
+
 void SenseoState::processCommands(CommandComponent::CommandBitFields commands)
 {
-    if ((commands & commandComponent->getProcessedCommands()) != 0)
+    if ((commands & commandComponent->getPendingCommands()) != 0)
     {
-        Homie.getLogger() << getStateName() << ": Processing commands " << commandComponent->getCommandsAsString(commands & commandComponent->getProcessedCommands()) << endl;
+        Homie.getLogger() << getStateName() << ": Processing commands " << commandComponent->getCommandsAsString(commands & commandComponent->getPendingCommands()) << endl;
     }
     commandComponent->proccessCommands(commands); 
 }

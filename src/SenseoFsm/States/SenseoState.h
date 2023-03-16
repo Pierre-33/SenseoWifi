@@ -15,6 +15,7 @@ class SenseoState : public FsmState
         void onInitialized() override;
 
         bool hasOffCommands() const;
+        void processOffCommands();
         bool hasPendingCommands(CommandComponent::CommandBitFields commands) const { return commandComponent->hasPendingCommands(commands); }
         bool hasProcessedCommands(CommandComponent::CommandBitFields commands) const { return commandComponent->hasProcessedCommands(commands); }
         void processCommands(CommandComponent::CommandBitFields commands);

@@ -47,5 +47,5 @@ void CommandComponent::sendCommands(CommandBitFields newCommands)
 void CommandComponent::updateSenseoNode()
 {
     senseoNode.setProperty("pendingCommands").send(getCommandsAsString(pendingCommands));
-    senseoNode.setProperty("ProcessedCommands").send(getCommandsAsString(ProcessedCommands));
+    senseoNode.setProperty("processedCommands").send(getCommandsAsString(ProcessedCommands));
 }

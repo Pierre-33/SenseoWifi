@@ -43,8 +43,8 @@ void BrewingState::onExit(StateId nextState)
     int brewedSize = 0;    
     int brewedSeconds = (getTimeInState()+ 500) / 1000;    
     
-    if (hasCommand(CommandComponent::Brew1Cup)) brewedSize = 1;
-    else if (hasCommand(CommandComponent::Brew2Cup)) brewedSize = 2;
+    if (hasProcessedCommands(CommandComponent::Brew1Cup)) brewedSize = 1;
+    else if (hasProcessedCommands(CommandComponent::Brew2Cup)) brewedSize = 2;
     else if (brewedSeconds > 10) 
     {
         // Determine brewed cup size based on time in brewing state

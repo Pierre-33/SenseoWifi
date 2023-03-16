@@ -11,19 +11,32 @@ void SenseoState::onInitialized()
     assert(controlComponent != nullptr);
 }
 
-bool SenseoState::hasOffCommands()
+bool SenseoState::hasOffCommands() const
 {
-    if (commandComponent->hasCommand(CommandComponent::TurnOff)) return true;
-    else if (commandComponent->hasCommand(CommandComponent::TurnOffAfterBrewing) && commandComponent->hasAnyCommands(CommandComponent::Brew1Cup | CommandComponent::Brew2Cup) == false) return true;
+    if (commandComponent->hasPendingCommands(CommandComponent::TurnOff)) return true;
+    else if (commandComponent->hasPendingCommands(CommandComponent::TurnOffAfterBrewing) && commandComponent->hasPendingCommands(CommandComponent::Brew1Cup | CommandComponent::Brew2Cup) == false) return true;
 
     return false;
 }
 
+void SenseoState::processCommands(CommandComponent::CommandBitFields commands)
+{
+    if ((commands & commandComponent->getProcessedCommands()) != 0)
+    {
+        Homie.getLogger() << getStateName() << ": Processing commands " << commandComponent->getCommandsAsString(commands & commandComponent->getProcessedCommands()) << endl;
+    }
+    commandComponent->proccessCommands(commands); 
+}
+
 void SenseoState::clearCommands(CommandComponent::CommandBitFields commands) 
 { 
-    if ((commands & commandComponent->getCommands()) != 0)
+    if ((commands & commandComponent->getPendingCommands()) != 0)
     {
-        Homie.getLogger() << getStateName() << ": Clearing commands " << commandComponent->getCommandsAsString(commands & commandComponent->getCommands()) << endl;
+        Homie.getLogger() << getStateName() << ": Clearing pending commands " << commandComponent->getCommandsAsString(commands & commandComponent->getPendingCommands()) << endl;
     }
-    commandComponent->clearCommand(commands); 
+    if ((commands & commandComponent->getProcessedCommands()) != 0)
+    {
+        Homie.getLogger() << getStateName() << ": Clearing processed commands " << commandComponent->getCommandsAsString(commands & commandComponent->getProcessedCommands()) << endl;
+    }
+    commandComponent->clearCommands(commands); 
 }

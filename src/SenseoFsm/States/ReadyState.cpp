@@ -26,14 +26,16 @@ void ReadyState::onUpdate()
     }
     else if (ledState == LED_SLOW) changeState<BrewingState>(); //TODO overload this state and remove this statement when the Button addon is used
     else if (ledState == LED_FAST) changeState<NoWaterState>();
-    else if (hasCommand(CommandComponent::Brew1Cup))
+    else if (hasPendingCommands(CommandComponent::Brew1Cup))
     {
         controlComponent->pressLeftButton();
-        changeState<BrewingState>();
+        processCommands(CommandComponent::Brew1Cup);
+        changeState<BrewingState>();        
     }
-    else if (hasCommand(CommandComponent::Brew2Cup))
+    else if (hasPendingCommands(CommandComponent::Brew2Cup))
     {
         controlComponent->pressRightButton();
+        processCommands(CommandComponent::Brew2Cup);
         changeState<BrewingState>();
     }
 }

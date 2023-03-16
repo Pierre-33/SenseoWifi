@@ -23,10 +23,11 @@ void OffState::onUpdate()
     if (ledState == LED_SLOW) changeState<HeatingState>();
     else if (ledState == LED_FAST) changeState<NoWaterState>();
     else if (ledState == LED_ON) changeState<ReadyState>();
-    else if (hasCommand(CommandComponent::TurnOn))
+    else if (hasPendingCommands(CommandComponent::TurnOn))
     {
         Homie.getLogger() << "Turning On" << endl;
         controlComponent->pressPowerButton();
+        processCommands(CommandComponent::TurnOn);
     }
 }
 

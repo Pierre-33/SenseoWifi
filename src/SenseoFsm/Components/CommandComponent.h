@@ -23,20 +23,29 @@ class CommandComponent : public  FsmComponent<CommandComponent>
             All = 0xff,
         };
 
-        void sendCommands(CommandBitFields newCommands) { commands = newCommands; updateSenseoNode(); }
-        void clearCommand(CommandBitFields commandsToClear) { commands &= ~commandsToClear; updateSenseoNode(); }
-        bool hasCommand(Command command) const { return hasCommand(commands,command); }
-        static bool hasCommand(CommandBitFields commands, Command command) { return (commands & command) == command; }
-        bool hasAnyCommands(CommandBitFields command) const { return (commands & command) != 0; }
-        CommandBitFields getCommands() const { return commands; }
+        void sendCommands(CommandBitFields newCommands);
+        void proccessCommands(CommandBitFields newCommands);
+        void clearCommands(CommandBitFields commands);
 
-        static const char * commandToString(Command command);
-        String getCommandsAsString() const { return getCommandsAsString(commands); };
+        //will return true if any of the commands is present in the pending command
+        bool hasPendingCommands(CommandBitFields command) const { return (pendingCommands & command) != 0; };
+        //will return true if any of the commands is present in the Processed command
+        bool hasProcessedCommands(CommandBitFields command) const { return (ProcessedCommands & command) != 0; };
+        
+        CommandBitFields getPendingCommands() const { return pendingCommands; }
+        CommandBitFields getProcessedCommands() const { return ProcessedCommands; }
+
+        String getPendingCommandsAsString() const { return getCommandsAsString(pendingCommands); };
+        String getProcessedCommandsAsString() const { return getCommandsAsString(ProcessedCommands); };
+        
+        static const char * commandToString(Command command);        
         static String getCommandsAsString(CommandBitFields commands);
+        static bool hasCommand(CommandBitFields commands, Command command) { return (commands & command) == command; }
         
     private:
         void updateSenseoNode();
-        CommandBitFields commands = 0;
+        CommandBitFields ProcessedCommands = 0;
+        CommandBitFields pendingCommands = 0;
         HomieNode & senseoNode;
 
         static inline const std::map<Command,const char *> commandName = {{TurnOn,"TurnOn"},{TurnOff,"TurnOff"},{Brew1Cup,"Brew1Cup"},{Brew2Cup,"Brew2Cup"},{TurnOffAfterBrewing,"TurnOffAfterBrewing"}};

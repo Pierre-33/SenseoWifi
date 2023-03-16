@@ -19,6 +19,8 @@ static const int HeatingTime = 70;
 static const int HeatingTimeTol = 15;
 static const int Brew1CupSeconds = 21;
 static const int Brew2CupSeconds = 41;
+static const int Brew1CupMillies = Brew1CupSeconds * 1000;
+static const int Brew2CupMillies = Brew2CupSeconds * 1000;
 static const int BrewHeat1CupSeconds = 55;
 static const int BrewHeat2CupSeconds = 85;
 

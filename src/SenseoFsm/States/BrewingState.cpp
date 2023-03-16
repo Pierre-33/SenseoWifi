@@ -4,6 +4,7 @@
 #include "NoWaterState.h"
 #include "ReadyState.h"
 #include "OffState.h"
+#include "HeatingState.h"
 #include "constants.h"
 #include "../Components/CupComponent.h"
 #include "../Components/SenseoLedComponent.h"
@@ -30,6 +31,8 @@ void BrewingState::onUpdate()
     else if (hasOffCommands()) processOffCommands();
     else if (ledState == LED_FAST) changeState<NoWaterState>();
     else if (ledState == LED_ON && getTimeInState() > 5000) changeState<ReadyState>();
+    else if (hasProcessedCommands(CommandComponent::Brew1Cup) && getTimeInState() > Brew1CupMillies) changeState<HeatingState>();
+    else if (hasProcessedCommands(CommandComponent::Brew2Cup) && getTimeInState() > Brew2CupMillies) changeState<HeatingState>();
 }
 
 void BrewingState::onExit(StateId nextState) 

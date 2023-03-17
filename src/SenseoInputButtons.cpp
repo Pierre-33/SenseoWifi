@@ -2,7 +2,8 @@
 
 SenseoInputButtons::SenseoInputButtons(int pLedPin) 
 {
-  analogPin = analogPin;
+  analogPin = pLedPin;
+  pinMode(pLedPin, INPUT); 
 }
 
 void SenseoInputButtons::addButtonPushHandler(int buttonValue,const ButtonHandler &handler)

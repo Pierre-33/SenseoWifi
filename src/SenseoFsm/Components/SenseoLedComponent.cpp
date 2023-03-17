@@ -10,6 +10,7 @@ SenseoLedComponent::SenseoLedComponent(int pLedPin)
 {
   ledPin = pLedPin;
   timestampChanged = millis();
+  pinMode(ledPin, OUTPUT);  
   digitalWrite(ledPin, LOW);  
 }
 

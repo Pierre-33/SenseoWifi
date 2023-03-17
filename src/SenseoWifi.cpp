@@ -392,16 +392,7 @@ void setup()
   */
 
   //TODO: move those initialization in their respective component
-  pinMode(ocPressLeftPin, OUTPUT);
-  pinMode(ocPressRightPin, OUTPUT);
-  pinMode(ocPressPowerPin, OUTPUT);
   pinMode(ocSenseLedPin, INPUT_PULLUP);
-
-  digitalWrite(ocPressPowerPin, LOW);
-  digitalWrite(ocPressLeftPin, LOW);
-  digitalWrite(ocPressRightPin, LOW);
-
-  pinMode(beeperPin, OUTPUT);
 
   // it seems at this point Homie configuration variable are not set
   if (CupDetectorAvailableSetting.get()) 
@@ -451,12 +442,7 @@ void setup()
   Homie.setup();
 
   //TODO: test if I can move all setup things in the setup handler
-  if (UseCustomizableButtonsAddon.get()) 
-  {
-    pinMode(senseoLedOutPin, OUTPUT);  
-    digitalWrite(senseoLedOutPin, LOW);
-  }
-  else 
+  if (!UseCustomizableButtonsAddon.get()) 
   {
     pinMode(resetButtonPin, INPUT_PULLUP);
     Homie.setResetTrigger(resetButtonPin, LOW, 5000);

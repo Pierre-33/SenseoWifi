@@ -8,6 +8,13 @@
 #include "pins.h"
 
 inline void testIO() {
+
+  pinMode(ocPressLeftPin, OUTPUT);
+  pinMode(ocPressRightPin, OUTPUT);
+  pinMode(ocPressPowerPin, OUTPUT);
+
+  pinMode(beeperPin, OUTPUT);
+
   Serial.println("\n=================================");
   Serial.println("   ☕☕☕ Hello Senseo! ☕☕☕");
   Serial.println("   Executing Test Routine");

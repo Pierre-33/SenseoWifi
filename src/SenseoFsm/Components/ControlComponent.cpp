@@ -8,10 +8,19 @@ Released under some license.
 #include <Arduino.h>
 #include "constants.h"
 
-ControlComponent::ControlComponent(int pBPin, int lBPin,  int rBPin) {
+ControlComponent::ControlComponent(int pBPin, int lBPin,  int rBPin) 
+{
   powerButtonPin = pBPin;
   leftButtonPin = lBPin;
   rightButtonPin = rBPin;
+
+  pinMode(leftButtonPin, OUTPUT);
+  pinMode(rightButtonPin, OUTPUT);
+  pinMode(powerButtonPin, OUTPUT);
+
+  digitalWrite(powerButtonPin, LOW);
+  digitalWrite(leftButtonPin, LOW);
+  digitalWrite(rightButtonPin, LOW);
 }
 
 void ControlComponent::pressPowerButton() {

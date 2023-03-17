@@ -2,6 +2,7 @@
 #include <Homie.h>
 
 #include "../Components/ControlComponent.h"
+#include "../Components/SenseoLedComponent.h"
 
 void SenseoState::onInitialized()
 {
@@ -28,6 +29,9 @@ void SenseoState::processOffCommands()
 {
     controlComponent->pressPowerButton();
     processCommands(CommandComponent::TurnOff | CommandComponent::TurnOffAfterBrewing);
+
+    //This should improved perceived reactivity 
+    EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,turnOff());
 }
 
 void SenseoState::processCommands(CommandComponent::CommandBitFields commands)

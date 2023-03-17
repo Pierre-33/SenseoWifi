@@ -7,6 +7,13 @@
 #include "../Components/BuzzerComponent.h"
 #include "../Components/SenseoLedComponent.h"
 #include "../Components/ControlComponent.h"
+#include "../Components/ProgramComponent.h"
+
+void OffState::onInitialized()
+{
+    SenseoState::onInitialized();
+    programComponent = getComponent<ProgramComponent>();
+}
 
 void OffState::onEnter(StateId previousState) 
 {
@@ -27,7 +34,21 @@ void OffState::onUpdate()
     {
         controlComponent->pressPowerButton();
         processCommands(CommandComponent::TurnOn);
+        //This should improved perceived reactivity 
+        EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,turnOn());
     }
+    else if (programComponent != nullptr && ! hasProcessedCommands(CommandComponent::TurnOn))
+    {
+        if (programComponent->hasAnyProgram())
+        {
+            EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(500,30000));
+        }
+        else
+        {
+            EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,turnOff());   
+        }
+    }
+
 }
 
 void OffState::onExit(StateId nextState) 

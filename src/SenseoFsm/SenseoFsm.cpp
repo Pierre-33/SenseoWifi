@@ -6,6 +6,7 @@
 #include "Components/CupComponent.h"
 #include "Components/ControlComponent.h"
 #include "Components/CommandComponent.h"
+#include "Components/ProgramComponent.h"
 #include "States/BrewingState.h"
 #include "States/HeatingState.h"
 #include "States/NoWaterState.h"
@@ -19,6 +20,7 @@
 void SenseoFsm::setup(const SenseoLed & led,bool useCupDetector, bool useBuzzer, bool useCustomizableButton) 
 {
     addComponent<>(std::make_unique<CommandComponent>(senseoNode));
+    addComponent<>(std::make_unique<ProgramComponent>(senseoNode));
     addComponent<>(std::make_unique<ControlComponent>(ocPressPowerPin, ocPressLeftPin, ocPressRightPin));
     
     if (useBuzzer) addComponent(std::make_unique<BuzzerComponent>(beeperPin));

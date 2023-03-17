@@ -49,7 +49,7 @@ void SenseoInputButtons::update()
     }
 
     //Manage release handlers
-    if (previousReading > A0buttonThreeshold) 
+    if (previousReading > A0buttonThreeshold && reading <= A0buttonThreeshold) 
     {
       const HandlerData * bestHandler = nullptr;
       unsigned long releaseTime = lastReadingTime - lastReadingChangeTime;

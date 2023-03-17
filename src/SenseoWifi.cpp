@@ -31,7 +31,8 @@ std::unique_ptr<SenseoInputButtons> myInputbuttons;
 /**
 * Called by the LED changed interrupt
 */
-void IRAM_ATTR ledChangedHandler() {
+void IRAM_ATTR ledChangedHandler() 
+{
   mySenseoLed.pinStateToggled();
 }
 
@@ -62,6 +63,43 @@ bool powerHandler(const HomieRange& range, const String& value)
     senseoNode.setProperty("power").send("false");
     tone(beeperPin, 4096, 8000);
     Homie.reset();
+  }
+  return true;
+}
+
+bool program1Cup = false;
+bool program2Cup = false;
+
+bool program1CupHandler(const HomieRange& range, const String& value) 
+{
+  if (value == "true") 
+  {
+    program1Cup = true;
+    program2Cup = false;
+    senseoNode.setProperty("program1Cup").send("true");    
+    senseoNode.setProperty("program2Cup").send("false");
+  }
+  else if (value == "false") 
+  {
+    program1Cup = false;
+    senseoNode.setProperty("program1Cup").send("false");
+  }
+  return true;
+}
+
+bool program2CupHandler(const HomieRange& range, const String& value) 
+{
+  if (value == "true") 
+  {
+    program1Cup = false;
+    program2Cup = true;
+    senseoNode.setProperty("program1Cup").send("false");    
+    senseoNode.setProperty("program2Cup").send("true");
+  }
+  else if (value == "false") 
+  {
+    program2Cup = false;
+    senseoNode.setProperty("program2Cup").send("false");
   }
   return true;
 }
@@ -106,16 +144,19 @@ bool brewHandler(const HomieRange& range, const String& value)
 /**
 * Called by Homie upon an MQTT message to '.../buzzer'.
 */
-bool buzzerHandler(const HomieRange& range, const String& value) {
+bool buzzerHandler(const HomieRange& range, const String& value) 
+{
   BuzzerComponent * buzzerComponent = mySenseo.getComponent<BuzzerComponent>();
-  if (buzzerComponent != nullptr) {
+  if (buzzerComponent != nullptr) 
+  {
     senseoNode.setProperty("buzzer").send(value);
     bool success = buzzerComponent->buzz(value);
     if (!success) senseoNode.setProperty("debug").send("buzzer: malformed message content. Allowed: [melody1,melody2,melody3].");
     senseoNode.setProperty("buzzer").send("");
     return success;
   }
-  else {
+  else 
+  {
     senseoNode.setProperty("debug").send("buzzer: not configured.");
     return false;
   }
@@ -159,6 +200,13 @@ void publishHomeAssistandDiscoveryConfig()
     //switch
     success = ha.publishSwitchConfig("Power","power",{{"icon","mdi:power"}});    
     Homie.getLogger() << "power: " << (success ? "success" : "failed") << endl;
+    if (UseCustomizableButtonsAddon.get())
+    {
+      success = ha.publishSwitchConfig("Program 1 Cup","program1Cup",{{"icon","mdi:coffee"}});    
+      Homie.getLogger() << "power: " << (success ? "success" : "failed") << endl;
+      success = ha.publishSwitchConfig("Program 2 Cups","program2Cup",{{"icon","mdi:coffee"}});    
+      Homie.getLogger() << "power: " << (success ? "success" : "failed") << endl;
+    }
 
     //button
     success = ha.publishButtonConfig("Brew Coffee Normal","brew","1cup",{{"icon","mdi:coffee"}});    
@@ -212,7 +260,8 @@ void togglePower()
 /**
 *
 */
-void setupHandler() {
+void setupHandler() 
+{
   // configuring the state machine
   mySenseo.setup(mySenseoLed,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),UseCustomizableButtonsAddon.get());
 
@@ -237,7 +286,8 @@ void setupHandler() {
   //Do we really need that? The Fsm should properly send the information on it's first update
   //senseoNode.setProperty("opState").send(UnknownState::s_StateName);
   CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
-  if (cupComponent != nullptr) {
+  if (cupComponent != nullptr) 
+  {
     senseoNode.setProperty("cupAvailable").send(cupComponent->isAvailable() ? "true" : "false");
     senseoNode.setProperty("cupFull").send(cupComponent->isFull() ? "true" : "false");
   }
@@ -249,7 +299,8 @@ void setupHandler() {
 /**
 *
 */
-void loopHandler() {
+void loopHandler() 
+{
   /**
   * Update the low level LED state machine based on the measured LED timings.
   * (off, slow blinking, fast blinking, on)
@@ -276,16 +327,19 @@ void loopHandler() {
   if (cupComponent != nullptr) 
   {
     //myCup.updateState();
-    if (cupComponent->isAvailableChanged()) {
+    if (cupComponent->isAvailableChanged()) 
+    {
       senseoNode.setProperty("cupAvailable").send(cupComponent->isAvailable() ? "true" : "false");
     }
-    if (cupComponent->isFullChanged()) {
+    if (cupComponent->isFullChanged()) 
+    {
       senseoNode.setProperty("cupFull").send(cupComponent->isFull() ? "true" : "false");
     }
   }  
 }
 
-void setup() {
+void setup() 
+{
   Serial.begin(115200);
 
   /**
@@ -347,6 +401,8 @@ void setup() {
   senseoNode.advertise("processedCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
   senseoNode.advertise("opState").setName("Operational State").setDatatype("enum").setFormat("SENSEO_unknown,SENSEO_OFF,SENSEO_HEATING,SENSEO_READY,SENSEO_BREWING,SENSEO_NOWATER");
   senseoNode.advertise("power").setName("Power").setDatatype("boolean").settable(powerHandler);
+  senseoNode.advertise("program1Cup").setName("Program1Cup").setDatatype("boolean").settable(program1CupHandler);
+  senseoNode.advertise("program2Cup").setName("Program2Cup").setDatatype("boolean").settable(program2CupHandler);
   senseoNode.advertise("brew").setName("Brew").settable(brewHandler).setDatatype("enum").setFormat("1cup,2cup");
   senseoNode.advertise("brewedSize").setName("Brew Size").setDatatype("string").setRetained(false);
   senseoNode.advertise("outOfWater").setName("Out of Water").setDatatype("boolean");

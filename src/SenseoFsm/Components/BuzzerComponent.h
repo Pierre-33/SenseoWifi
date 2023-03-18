@@ -7,8 +7,11 @@ class BuzzerComponent : public  FsmComponent<BuzzerComponent>
 {
     public:
         BuzzerComponent(int buzzerPin) : myBuzzer(buzzerPin) {}
-        bool buzz(const String & tune);
+        bool playMelody(const String & tune);
         void update();
+        void beep();
+
+        String getValidTunes() const;
 
     private:
         ezBuzzer myBuzzer;

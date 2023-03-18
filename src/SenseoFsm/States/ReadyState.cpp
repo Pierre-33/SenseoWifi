@@ -11,7 +11,7 @@
 void ReadyState::onEnter(StateId previousState) 
 {
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,turnOn());
-    EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,buzz("melody1"));
+    EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,playMelody("melody1"));
 }
 
 void ReadyState::onUpdate() 

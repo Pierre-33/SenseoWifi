@@ -67,7 +67,7 @@ bool powerHandler(const HomieRange& range, const String& value)
   else if (value == "reset") 
   {
     senseoNode.setProperty("power").send("false");
-    tone(beeperPin, 4096, 8000);
+    EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("reset"));
     Homie.reset();
   }
   return true;
@@ -145,7 +145,7 @@ bool buzzerHandler(const HomieRange& range, const String& value)
   if (buzzerComponent != nullptr) 
   {
     senseoNode.setProperty("buzzer").send(value);
-    bool success = buzzerComponent->buzz(value);
+    bool success = buzzerComponent->playMelody(value);
     if (!success) senseoNode.setProperty("debug").send("buzzer: malformed message content. Allowed: [melody1,melody2,melody3].");
     senseoNode.setProperty("buzzer").send("");
     return success;
@@ -260,12 +260,12 @@ void holdCupButtonHandler(ProgramComponent::Program program)
     if (programComponent->hasAnyProgram())
     {
       programComponent->clearProgram(ProgramComponent::all);
-      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,buzz("melody1"));
+      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
     }
     else
     {
       programComponent->requestProgram(program);
-      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,buzz("melody2"));
+      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("melody2"));
     }
   }
 }
@@ -307,24 +307,24 @@ void setupHandler()
 
     myInputbuttons = std::make_unique<SenseoInputButtons>(senseoButtonsInputPin);
     myInputbuttons->addButtonReleaseHandler(A0buttonPwr,50,togglePower);
-    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,4000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,7000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
     myInputbuttons->addButtonReleaseHandler(A0buttonPwr,2000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
-    //myInputbuttons->addButtonHoldHandler(A0buttonPwr,2000,[]() { buzz("tone2"); });
-    //myInputbuttons->addButtonHoldHandler(A0buttonPwr,3000,[]() { buzz("tone2"); });
-    //myInputbuttons->addButtonHoldHandler(A0buttonPwr,4000,[]() { buzz("reset"); });
+    myInputbuttons->addButtonHoldHandler(A0buttonPwr,3000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
+    myInputbuttons->addButtonHoldHandler(A0buttonPwr,5000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
+    myInputbuttons->addButtonHoldHandler(A0buttonPwr,7000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("pinkpanther")); });
 
     myInputbuttons->addButtonReleaseHandler(A0button1Cup,50,[]() { brewCup(CommandComponent::Brew1Cup); });
     myInputbuttons->addButtonHoldHandler(A0button1Cup,1000,[]() { holdCupButtonHandler(ProgramComponent::oneCup); });
-    myInputbuttons->addButtonHoldHandler(A0button1Cup,2000,[]() { holdCupButtonHandler(ProgramComponent::oneCup); });
+    myInputbuttons->addButtonHoldHandler(A0button1Cup,3000,[]() { holdCupButtonHandler(ProgramComponent::oneCup); });
     myInputbuttons->addButtonReleaseHandler(A0button1Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
 
     myInputbuttons->addButtonReleaseHandler(A0button2Cup,50,[]() { brewCup(CommandComponent::Brew2Cup); });
     myInputbuttons->addButtonHoldHandler(A0button2Cup,1000,[]() { holdCupButtonHandler(ProgramComponent::twoCup); });
-    myInputbuttons->addButtonHoldHandler(A0button2Cup,2000,[]() { holdCupButtonHandler(ProgramComponent::twoCup); });
+    myInputbuttons->addButtonHoldHandler(A0button2Cup,3000,[]() { holdCupButtonHandler(ProgramComponent::twoCup); });
     myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
   }
 
-  if (BuzzerSetting.get()) tone(beeperPin, 2048, 500);
+  EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("melody1"));
 
   Homie.getLogger() << endl << "☕☕☕☕ Enjoy your SenseoWifi ☕☕☕☕" << endl << endl;
 
@@ -437,7 +437,6 @@ void setup()
   PublishHomeAssistantDiscoveryConfig.setDefaultValue(true);
   UseCustomizableButtonsAddon.setDefaultValue(true);
 
-  if (BuzzerSetting.get()) tone(beeperPin, 1536, 2000);
   Homie.onEvent(onHomieEvent);
   Homie.setup();
 

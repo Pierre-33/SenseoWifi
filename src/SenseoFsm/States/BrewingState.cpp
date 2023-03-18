@@ -9,6 +9,7 @@
 #include "../Components/CupComponent.h"
 #include "../Components/SenseoLedComponent.h"
 #include "../Components/ControlComponent.h"
+#include "../Components/BuzzerComponent.h"
 
 void BrewingState::onEnter(StateId previousState) 
 {
@@ -37,6 +38,7 @@ void BrewingState::onUpdate()
 
 void BrewingState::onExit(StateId nextState) 
 {
+    EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,playMelody("cupready"));
     senseoNode.setProperty("brew").send("false");
 
     int brewedSize = 0;    

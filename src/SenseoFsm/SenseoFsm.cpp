@@ -23,7 +23,8 @@ void SenseoFsm::setup(const SenseoLed & led,bool useCupDetector, bool useBuzzer,
     addComponent<>(std::make_unique<ProgramComponent>(senseoNode));
     addComponent<>(std::make_unique<ControlComponent>(ocPressPowerPin, ocPressLeftPin, ocPressRightPin));
     
-    if (useBuzzer) addComponent(std::make_unique<BuzzerComponent>(beeperPin));
+    //if (useBuzzer) addComponent(std::make_unique<BuzzerComponent>(beeperPin));
+    addComponent(std::make_unique<BuzzerComponent>(beeperPin));
     if (useCupDetector) addComponent(std::make_unique<CupComponent>(senseoNode,cupDetectorPin));
     if (useCustomizableButton) addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
     

@@ -18,6 +18,7 @@ Released under some license.
 #include "SenseoFsm/Components/programComponent.h"
 #include "ModularFsm/FsmState.h"
 #include "SenseoInputButtons.h"
+#include "SenseoLed2.h"
 
 #ifdef EXECUTE_IF_COMPONENT_EXIST 
 #undef EXECUTE_IF_COMPONENT_EXIST
@@ -260,12 +261,12 @@ void holdCupButtonHandler(ProgramComponent::Program program)
     if (programComponent->hasAnyProgram())
     {
       programComponent->clearProgram(ProgramComponent::all);
-      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
+      //EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
     }
     else
     {
       programComponent->requestProgram(program);
-      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("melody2"));
+      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("programcup"));
     }
   }
 }

@@ -25,6 +25,32 @@ static inline const std::map<String, const BuzzerMelody> musicLibrary = {
         { NOTE_C4, NOTE_C5 } ,
         { 4, 8 } 
     }},
+    { "SuperMarioBrosGround", {
+        { NOTE_E4, NOTE_E4,NOTE_E4,NOTE_C4,NOTE_G4} ,
+        { 8,4,4,8,2} 
+    }},
+    { "zelda2", {
+        { NOTE_GS3, NOTE_C3,NOTE_D4,
+        NOTE_F4,NOTE_GS4,NOTE_C5,NOTE_D5,
+        NOTE_F5,NOTE_GS5,NOTE_C6,NOTE_D6,
+        NOTE_D6,NOTE_D6} ,
+        { 4, 8,8,
+        8,8,8,8,
+        8,8,8,8,
+        4,2} 
+    }},
+    { "Zelda3", {
+        { NOTE_G5, NOTE_FS5,NOTE_DS5,NOTE_A4,
+        NOTE_GS4,NOTE_E5,NOTE_GS5,NOTE_C6} ,
+        { 9,9,9,9,
+        9,9,9,9} 
+    }},
+    { "ACNH", {
+        { NOTE_C5, NOTE_A4,NOTE_F4,NOTE_D5,
+        NOTE_C5,NOTE_A4,NOTE_F4,NOTE_F4,NOTE_D4,NOTE_G4} ,
+        { 4,4,4,4,
+        2,4,4,4,4,2} 
+    }},
     { "cupready", { 
         { NOTE_A4, NOTE_AS4, NOTE_B4, NOTE_C5 }, 
         { 8, 8, 8,2 }

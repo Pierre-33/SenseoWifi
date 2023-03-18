@@ -7,7 +7,8 @@
 #ifndef SenseoEnums_h
 #define SenseoEnums_h
 
-enum ledStateEnum {
+enum ledStateEnum : char //this garanty that accessing the enum is atomic
+{
   LED_unknown,
   LED_OFF,
   LED_SLOW,

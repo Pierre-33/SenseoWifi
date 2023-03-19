@@ -3,14 +3,14 @@
 
 #include "SenseoFsm/Components/CommandComponent.h"
 
-class SenseoLed;
+class ISenseoLed;
 class HomieNode;
 class ControlComponent;
 
 class SenseoState : public FsmState
 {    
     public:
-        SenseoState(const SenseoLed & led, HomieNode & node) : senseoLed(led),senseoNode(node) {}
+        SenseoState(const ISenseoLed & led, HomieNode & node) : senseoLed(led),senseoNode(node) {}
 
         void onInitialized() override;
 
@@ -22,7 +22,7 @@ class SenseoState : public FsmState
         void clearCommands(CommandComponent::CommandBitFields commands);
 
     protected:
-        const SenseoLed & senseoLed;
+        const ISenseoLed & senseoLed;
         HomieNode & senseoNode;
         CommandComponent * commandComponent = nullptr;    
         ControlComponent * controlComponent = nullptr;    

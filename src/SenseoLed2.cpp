@@ -4,28 +4,31 @@
 #include <Homie.h>
 
 int SenseoLed2::ledPin = 0;
-int SenseoLed2::pulseDuration = 0;
-unsigned long SenseoLed2::ledChangeMillis = 0;
-ledStateEnum SenseoLed2::ledState = LED_unknown;
 
-ledStateEnum SenseoLed2::prevState = LED_unknown;
-bool SenseoLed2::hasPulse = false;
+//variable use both inside and outside the ISR should be volatile as they could be modified from outside the current code path
+volatile static ledStateEnum ledState = LED_unknown;
+//volatile static int pulseDuration = 0; // don't forget to remove the variable declaration in ledChangedIsr()
 
-static uint32_t timerTick = int(pulseDurLedSlow * 1.1)/*seconds*/ * 100000 /*to us*/ * 5 /*to tick*/;
+static uint32_t timerTick = uint32_t(float((pulseDurLedSlow + pulseDurTolerance)/*ms*/ * 1000 /*to us*/) / 3.2 /*to tick*/);
+
+ledStateEnum SenseoLed2::getState() const 
+{ 
+    return ledState; 
+}
 
 void IRAM_ATTR SenseoLed2::ledChangedIsr() 
 {
+    static unsigned long ledChangeMillis = 0;
+
     unsigned long now = millis();
     int pulseDuration = now - ledChangeMillis;
     if (abs(pulseDuration - pulseDurLedFast) < pulseDurTolerance) ledState = LED_FAST;
     else if (abs(pulseDuration - pulseDurLedSlow) < pulseDurTolerance) ledState = LED_SLOW;
+    else pulseDuration = 0; //longer pulse duration means "no pulse" (continuous on or continuous off)
 
     //each time the led blink, we push back the timer
     timer1_write(timerTick);
     ledChangeMillis = now;
-    
-    //use to trigger debug log
-    hasPulse = true;
 }
 
 void IRAM_ATTR SenseoLed2::timerElapseIsr() 
@@ -37,8 +40,8 @@ void SenseoLed2::attachInterrupt()
 {
     ::attachInterrupt(digitalPinToInterrupt(ledPin), SenseoLed2::ledChangedIsr, CHANGE);
     timer1_attachInterrupt(SenseoLed2::timerElapseIsr);
-    timer1_enable(TIM_DIV16, TIM_EDGE, TIM_LOOP);
-    timer1_write(timerTick); // 2500000 / 5 ticks per us from TIM_DIV16 == 500,000 us interval 
+    timer1_enable(TIM_DIV256, TIM_EDGE, TIM_SINGLE);
+    timer1_write(timerTick); 
 }
 
 void SenseoLed2::detachInterrupt()
@@ -59,12 +62,20 @@ String SenseoLed2::getStateAsString()
 
 void SenseoLed2::debugLog()
 {
-    if (hasPulse) 
+    static ledStateEnum prevState = LED_unknown;
+    
+    /*static int lastPulseDuration = 0;
+    if (lastPulseDuration != pulseDuration) 
     {
         //pulseDuration is not thread safe. So the debug value display here could be glitchy every now and then
-        Homie.getLogger() << "LED observer, last pulse duration: " << pulseDuration << endl;
-        hasPulse = false;
-    }
+        if (pulseDuration > 0)
+        {
+            //pulse duration of 0 means continuous state
+            Homie.getLogger() << "LED observer, last pulse duration: " << pulseDuration << endl;
+        }
+        lastPulseDuration = pulseDuration;
+    }*/
+
     if (ledState != prevState)
     {
         Homie.getLogger() << "LED state machine, new LED state: " << getStateAsString() << endl;

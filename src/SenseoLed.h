@@ -10,7 +10,13 @@
 #include "enums.h"
 #include "constants.h"
 
-class SenseoLed
+class ISenseoLed
+{
+  public:
+    virtual ledStateEnum getState() const = 0;
+};
+
+class SenseoLed : public ISenseoLed
 {
   public:
     SenseoLed(int ledPin);
@@ -18,7 +24,7 @@ class SenseoLed
     int getLastPulseDuration() const;
     void updateState();
     bool hasChanged() const;
-    ledStateEnum getState() const;
+    ledStateEnum getState() const override;
     String getStateAsString() const;
   private:
     int ocSenseLedPin;

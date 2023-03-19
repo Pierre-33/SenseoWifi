@@ -32,16 +32,8 @@ HomieSetting<bool> PublishHomeAssistantDiscoveryConfig("homeassistantautodiscove
 HomieSetting<bool> UseCustomizableButtonsAddon("usecustomizablebuttonsaddon", "Use the additional pcb to customize button behavior, ...)");
 
 SenseoFsm mySenseo(senseoNode);
-SenseoLed mySenseoLed(ocSenseLedPin);
+SenseoLed2 mySenseoLed; //just an interface
 std::unique_ptr<SenseoInputButtons> myInputbuttons;
-
-/**
-* Called by the LED changed interrupt
-*/
-void IRAM_ATTR ledChangedHandler() 
-{
-  mySenseoLed.pinStateToggled();
-}
 
 /**
 * Called by Homie upon an MQTT message to '.../power'
@@ -223,10 +215,10 @@ void onHomieEvent(const HomieEvent &event)
   switch (event.type) 
   {
   case HomieEventType::WIFI_CONNECTED:
-    attachInterrupt(digitalPinToInterrupt(ocSenseLedPin), ledChangedHandler, CHANGE);
+    SenseoLed2::attachInterrupt();
     break;
   case HomieEventType::WIFI_DISCONNECTED:
-    detachInterrupt(digitalPinToInterrupt(ocSenseLedPin));
+    SenseoLed2::detachInterrupt();
     break;
   default:
     break;
@@ -249,6 +241,10 @@ void brewCup(CommandComponent::Command command)
 
 void togglePower()
 {
+  //static uint32_t timerTick = uint32_t(float(pulseContThreshold/*ms*/ * 1000 /*to us*/) / 3.2 /*to tick*/);
+  //timer1_write(timerTick);
+  //return;
+
   if (mySenseo.isOff()) mySenseo.sendCommands(CommandComponent::TurnOn);
   else mySenseo.sendCommands(CommandComponent::TurnOff);
 }
@@ -325,7 +321,7 @@ void setupHandler()
     myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
   }
 
-  EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("melody1"));
+  EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
 
   Homie.getLogger() << endl << "☕☕☕☕ Enjoy your SenseoWifi ☕☕☕☕" << endl << endl;
 
@@ -351,11 +347,7 @@ void loopHandler()
   * Update the low level LED state machine based on the measured LED timings.
   * (off, slow blinking, fast blinking, on)
   */
-  mySenseoLed.updateState();
-  if (mySenseoLed.hasChanged()) 
-  {
-    if (true) Homie.getLogger() << "LED state machine, new LED state: " << mySenseoLed.getStateAsString() << endl;
-  }
+  SenseoLed2::debugLog();
 
   if (myInputbuttons) myInputbuttons->update();
 
@@ -418,6 +410,8 @@ void setup()
   * Wifi will NOT BE AVAILABLE, no OTA!
   */
   if (false) testIO();
+
+  SenseoLed2::initialize(ocSenseLedPin);
 
 
   /**

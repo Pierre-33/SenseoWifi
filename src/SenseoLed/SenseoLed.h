@@ -7,14 +7,10 @@
 #define SenseoLed_h
 
 #include "Homie.h"
-#include "enums.h"
+#include "ISenseoLed.h"
 #include "constants.h"
 
-class ISenseoLed
-{
-  public:
-    virtual ledStateEnum getState() const = 0;
-};
+
 
 class SenseoLed : public ISenseoLed
 {
@@ -25,7 +21,7 @@ class SenseoLed : public ISenseoLed
     void updateState();
     bool hasChanged() const;
     ledStateEnum getState() const override;
-    String getStateAsString() const;
+    const char * getStateAsString() const;
   private:
     int ocSenseLedPin;
     bool ledChanged = false;

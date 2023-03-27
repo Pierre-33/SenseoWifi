@@ -7,7 +7,6 @@ Released under some license.
 #include <Homie.h>
 #include <memory>
 
-#include "SenseoLed.h"
 #include "pins.h"
 #include "constants.h"
 #include "testIO.cpp"
@@ -18,7 +17,7 @@ Released under some license.
 #include "SenseoFsm/Components/programComponent.h"
 #include "ModularFsm/FsmState.h"
 #include "SenseoInputButtons.h"
-#include "SenseoLed2.h"
+#include "SenseoLed/SenseoLedTimerBased.h"
 
 #ifdef EXECUTE_IF_COMPONENT_EXIST 
 #undef EXECUTE_IF_COMPONENT_EXIST
@@ -32,7 +31,7 @@ HomieSetting<bool> PublishHomeAssistantDiscoveryConfig("homeassistantautodiscove
 HomieSetting<bool> UseCustomizableButtonsAddon("usecustomizablebuttonsaddon", "Use the additional pcb to customize button behavior, ...)");
 
 SenseoFsm mySenseo(senseoNode);
-SenseoLed2 mySenseoLed; //just an interface
+SenseoLedTimerBased mySenseoLed(senseoNode,ocSenseLedPin); //just an interface
 std::unique_ptr<SenseoInputButtons> myInputbuttons;
 
 /**
@@ -222,10 +221,10 @@ void onHomieEvent(const HomieEvent &event)
   switch (event.type) 
   {
   case HomieEventType::WIFI_CONNECTED:
-    SenseoLed2::attachInterrupt();
+    mySenseoLed.attachInterrupt();
     break;
   case HomieEventType::WIFI_DISCONNECTED:
-    SenseoLed2::detachInterrupt();
+    mySenseoLed.detachInterrupt();
     break;
   default:
     break;
@@ -361,7 +360,7 @@ void loopHandler()
   * Update the low level LED state machine based on the measured LED timings.
   * (off, slow blinking, fast blinking, on)
   */
-  SenseoLed2::debugLog(senseoNode);
+  mySenseoLed.updateState();
 
   if (myInputbuttons) myInputbuttons->update();
 
@@ -424,9 +423,6 @@ void setup()
   * Wifi will NOT BE AVAILABLE, no OTA!
   */
   if (false) testIO();
-
-  SenseoLed2::initialize(ocSenseLedPin);
-
 
   /**
   * Homie specific settings

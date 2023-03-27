@@ -1,5 +1,6 @@
 #include "OffState.h"
-#include "SenseoLed.h"
+#include <Homie.h>
+#include "SenseoLed/ISenseoLed.h"
 #include "HeatingState.h"
 #include "NoWaterState.h"
 #include "ReadyState.h"

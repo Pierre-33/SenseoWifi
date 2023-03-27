@@ -1,5 +1,5 @@
 #include "ReadyState.h"
-#include "SenseoLed.h"
+#include "SenseoLed/ISenseoLed.h"
 #include "BrewingState.h"
 #include "NoWaterState.h"
 #include "OffState.h"

@@ -1,6 +1,7 @@
 #include "HeatingState.h"
 
-#include "SenseoLed.h"
+#include "SenseoLed/ISenseoLed.h"
+#include "constants.h"
 #include "NoWaterState.h"
 #include "ReadyState.h"
 #include "OffState.h"

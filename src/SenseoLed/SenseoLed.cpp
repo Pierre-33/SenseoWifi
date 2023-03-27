@@ -57,7 +57,7 @@ ledStateEnum SenseoLed::getState() const {
   return ledState;
 }
 
-String SenseoLed::getStateAsString() const {
+const char * SenseoLed::getStateAsString() const {
   if (ledState == LED_OFF) return "LED_OFF";
   else if (ledState == LED_SLOW) return "LED_SLOW";
   else if (ledState == LED_FAST) return "LED_FAST";

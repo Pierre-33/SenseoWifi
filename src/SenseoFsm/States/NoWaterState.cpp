@@ -1,6 +1,6 @@
 #include "NoWaterState.h"
-
-#include "SenseoLed.h"
+#include <Homie.h>
+#include "SenseoLed/ISenseoLed.h"
 #include "HeatingState.h"
 #include "ReadyState.h"
 #include "OffState.h"

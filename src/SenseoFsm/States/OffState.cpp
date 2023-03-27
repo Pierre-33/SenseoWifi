@@ -54,7 +54,6 @@ void OffState::onUpdate()
 void OffState::onExit(StateId nextState) 
 {
     if (nextState != UnknownState::s_StateId) clearCommands(CommandComponent::TurnOn);
-    EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,playMelody("melody3"));
     senseoNode.setProperty("power").send("true");
     senseoNode.setProperty("outOfWater").send("false");
     senseoNode.setProperty("brew").send("false");

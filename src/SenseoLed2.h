@@ -2,6 +2,7 @@
 
 #include "SenseoLed.h"
 class String;
+class HomieNode;
 
 class SenseoLed2 : public ISenseoLed
 {
@@ -11,7 +12,7 @@ class SenseoLed2 : public ISenseoLed
         static void detachInterrupt();
         virtual ledStateEnum getState() const override;
         static String getStateAsString();
-        static void debugLog();
+        static void debugLog(HomieNode & senseoNode);
     private:
         static void timerElapseIsr();
         static void ledChangedIsr();

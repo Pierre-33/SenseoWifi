@@ -2,6 +2,7 @@
 #include <ezBuzzer.h>
 #include "MusicLibrary.h"
 #include <Homie.h>
+#include "pins.h"
 
 #define REST 0
 

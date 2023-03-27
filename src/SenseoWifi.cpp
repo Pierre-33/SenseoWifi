@@ -139,7 +139,11 @@ bool buzzerHandler(const HomieRange& range, const String& value)
   {
     senseoNode.setProperty("buzzer").send(value);
     bool success = buzzerComponent->playMelody(value);
-    if (!success) senseoNode.setProperty("debug").send("buzzer: malformed message content. Allowed: [melody1,melody2,melody3].");
+    if (!success) 
+    {
+      String errorMsg = "buzzer: malformed message content. Allowed: [" + buzzerComponent->getValidTunes() + "]";
+      senseoNode.setProperty("debug").send(errorMsg);
+    }
     senseoNode.setProperty("buzzer").send("");
     return success;
   }
@@ -174,6 +178,9 @@ void publishHomeAssistandDiscoveryConfig()
 
     success = ha.publishSensorConfig("Operating State","opState",{{"icon", "mdi:state-machine"}});    
     Homie.getLogger() << "opState: " << (success ? "success" : "failed") << endl;
+
+    success = ha.publishSensorConfig("Led State","ledState",{{"icon", "mdi:state-machine"}});    
+    Homie.getLogger() << "ledState: " << (success ? "success" : "failed") << endl;
 
     //debug sensor
     success = ha.publishSensorConfig("Debug","debug",{{"icon","mdi:comment-text-multiple-outline"},{"entity_category","diagnostic"}});    
@@ -257,7 +264,7 @@ void holdCupButtonHandler(ProgramComponent::Program program)
     if (programComponent->hasAnyProgram())
     {
       programComponent->clearProgram(ProgramComponent::all);
-      //EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
+      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
     }
     else
     {
@@ -279,6 +286,7 @@ void setupHandler()
   senseoNode.advertise("pendingCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
   senseoNode.advertise("processedCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
   senseoNode.advertise("opState").setName("Operational State").setDatatype("enum").setFormat("SENSEO_unknown,SENSEO_OFF,SENSEO_HEATING,SENSEO_READY,SENSEO_BREWING,SENSEO_NOWATER");
+  senseoNode.advertise("ledState").setName("Led State").setDatatype("enum").setFormat("LED_unknown,LED_OFF,LED_SLOW,LED_FAST,LED_ON");
   senseoNode.advertise("power").setName("Power").setDatatype("boolean").settable(powerHandler);
   senseoNode.advertise("brew").setName("Brew").settable(brewHandler).setDatatype("enum").setFormat("1cup,2cup");
   senseoNode.advertise("brewedSize").setName("Brew Size").setDatatype("string").setRetained(false);
@@ -288,10 +296,16 @@ void setupHandler()
     senseoNode.advertise("cupAvailable").setName("Cup Available");
     senseoNode.advertise("cupFull").setName("Cup Full");
   }
-  if (BuzzerSetting.get()) senseoNode.advertise("buzzer").setName("Buzzer").settable(buzzerHandler).setDatatype("enum").setFormat("melody1,melody2,melody3");
 
   // configuring the state machine
   mySenseo.setup(mySenseoLed,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),UseCustomizableButtonsAddon.get());
+
+  if (mySenseo.getComponent<BuzzerComponent>() != nullptr) 
+  {
+    senseoNode.advertise("buzzer").setName("Buzzer").settable(buzzerHandler).setDatatype("enum").setFormat(mySenseo.getComponent<BuzzerComponent>()->getValidTunes().c_str());
+    Homie.getLogger() << "Advertising Buzzer" << endl;
+  }
+    
 
   //configuring the button handler
   if (UseCustomizableButtonsAddon.get())
@@ -308,7 +322,7 @@ void setupHandler()
     myInputbuttons->addButtonReleaseHandler(A0buttonPwr,2000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
     myInputbuttons->addButtonHoldHandler(A0buttonPwr,3000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
     myInputbuttons->addButtonHoldHandler(A0buttonPwr,5000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
-    myInputbuttons->addButtonHoldHandler(A0buttonPwr,7000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("pinkpanther")); });
+    myInputbuttons->addButtonHoldHandler(A0buttonPwr,7000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("mario")); });
 
     myInputbuttons->addButtonReleaseHandler(A0button1Cup,50,[]() { brewCup(CommandComponent::Brew1Cup); });
     myInputbuttons->addButtonHoldHandler(A0button1Cup,1000,[]() { holdCupButtonHandler(ProgramComponent::oneCup); });
@@ -321,7 +335,7 @@ void setupHandler()
     myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
   }
 
-  EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
+  //EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
 
   Homie.getLogger() << endl << "☕☕☕☕ Enjoy your SenseoWifi ☕☕☕☕" << endl << endl;
 
@@ -347,7 +361,7 @@ void loopHandler()
   * Update the low level LED state machine based on the measured LED timings.
   * (off, slow blinking, fast blinking, on)
   */
-  SenseoLed2::debugLog();
+  SenseoLed2::debugLog(senseoNode);
 
   if (myInputbuttons) myInputbuttons->update();
 

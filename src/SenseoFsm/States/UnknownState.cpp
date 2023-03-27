@@ -5,11 +5,17 @@
 #include "ReadyState.h"
 #include "OffState.h"
 #include "../Components/SenseoLedComponent.h"
+#include "../Components/BuzzerComponent.h"
 
 void UnknownState::onEnter(StateId previousState) 
 {
     clearCommands(CommandComponent::All);
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(200,1000));
+}
+
+void UnknownState::onExit(StateId nextState)
+{
+    EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,playMelody("zeldaSecret"));
 }
 
 void UnknownState::onUpdate() 

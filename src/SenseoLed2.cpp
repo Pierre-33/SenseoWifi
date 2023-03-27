@@ -60,7 +60,7 @@ String SenseoLed2::getStateAsString()
     else return "LED_unknown";
 }
 
-void SenseoLed2::debugLog()
+void SenseoLed2::debugLog(HomieNode & senseoNode)
 {
     static ledStateEnum prevState = LED_unknown;
     
@@ -79,6 +79,7 @@ void SenseoLed2::debugLog()
     if (ledState != prevState)
     {
         Homie.getLogger() << "LED state machine, new LED state: " << getStateAsString() << endl;
+        senseoNode.setProperty("ledState").send(getStateAsString());
         prevState = ledState;
     }
 }

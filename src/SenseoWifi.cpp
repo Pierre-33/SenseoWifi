@@ -18,6 +18,7 @@ Released under some license.
 #include "ModularFsm/FsmState.h"
 #include "SenseoInputButtons.h"
 #include "SenseoLed/SenseoLedTimerBased.h"
+#include "SenseoLed/SenseoLed.h"
 
 #ifdef EXECUTE_IF_COMPONENT_EXIST 
 #undef EXECUTE_IF_COMPONENT_EXIST
@@ -31,7 +32,8 @@ HomieSetting<bool> PublishHomeAssistantDiscoveryConfig("homeassistantautodiscove
 HomieSetting<bool> UseCustomizableButtonsAddon("usecustomizablebuttonsaddon", "Use the additional pcb to customize button behavior, ...)");
 
 SenseoFsm mySenseo(senseoNode);
-SenseoLedTimerBased mySenseoLed(senseoNode,ocSenseLedPin); //just an interface
+//SenseoLedTimerBased mySenseoLed(senseoNode,ocSenseLedPin); 
+SenseoLed mySenseoLed(senseoNode,ocSenseLedPin); 
 std::unique_ptr<SenseoInputButtons> myInputbuttons;
 
 /**

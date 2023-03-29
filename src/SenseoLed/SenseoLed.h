@@ -6,29 +6,36 @@
 #ifndef SenseoLed_h
 #define SenseoLed_h
 
-#include "Homie.h"
 #include "ISenseoLed.h"
-#include "constants.h"
 
-
+class HomieNode;
 
 class SenseoLed : public ISenseoLed
 {
   public:
-    SenseoLed(int ledPin);
-    void pinStateToggled();
-    int getLastPulseDuration() const;
-    void updateState();
-    bool hasChanged() const;
+    SenseoLed(HomieNode & senseoNode, int ledPin);
+
+    void attachInterrupt() override;
+    void detachInterrupt() override;
+
+    void updateState() override;
+
     ledStateEnum getState() const override;
-    const char * getStateAsString() const;
+    const char * getStateAsString() const override;
+
+    void pinStateToggled();
+
   private:
-    int ocSenseLedPin;
+    int getLastPulseDuration() const;    
+    bool hasChanged() const;
+
+    int ledPin;
     bool ledChanged = false;
     unsigned long ledChangeMillis;
     unsigned long prevLedChangeMillis = 0;
     ledStateEnum ledState = LED_unknown;
     ledStateEnum ledStatePrev = LED_unknown;
+    HomieNode & senseoNode;
 };
 
 #endif

@@ -249,10 +249,6 @@ void brewCup(CommandComponent::Command command)
 
 void togglePower()
 {
-  //static uint32_t timerTick = uint32_t(float(pulseContThreshold/*ms*/ * 1000 /*to us*/) / 3.2 /*to tick*/);
-  //timer1_write(timerTick);
-  //return;
-
   if (mySenseo.isOff()) mySenseo.sendCommands(CommandComponent::TurnOn);
   else mySenseo.sendCommands(CommandComponent::TurnOff);
 }

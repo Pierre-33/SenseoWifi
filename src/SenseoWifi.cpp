@@ -400,13 +400,13 @@ void setup()
   */
 
   //TODO: move those initialization in their respective component
-  pinMode(ocSenseLedPin, INPUT_PULLUP);
+  //pinMode(ocSenseLedPin, INPUT_PULLUP);
 
   // it seems at this point Homie configuration variable are not set
-  if (CupDetectorAvailableSetting.get()) 
+  /*if (CupDetectorAvailableSetting.get()) 
   {
     pinMode(cupDetectorPin, INPUT_PULLUP); 
-  }
+  }*/
 
   // pinMode(senseoButtonsInputPin, INPUT);  
   // while (true) 

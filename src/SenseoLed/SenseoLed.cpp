@@ -20,6 +20,7 @@ SenseoLed::SenseoLed(HomieNode & senseoNode, int pin)
 : ledPin(pin), senseoNode(senseoNode) 
 {
   ledChangeMillis = millis();
+  pinMode(ledPin, INPUT_PULLUP);
   assert(s_instance == nullptr); //You can't have two instance of this class
   s_instance = this;
 }

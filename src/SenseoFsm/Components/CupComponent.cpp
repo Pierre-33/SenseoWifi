@@ -13,6 +13,7 @@ Released under some license.
 CupComponent::CupComponent(HomieNode & node, int pin)
 : senseoNode(node), detectorPin(pin)
 {
+  pinMode(detectorPin, INPUT_PULLUP); 
   cupAvailable = !digitalRead(detectorPin);
 }
 

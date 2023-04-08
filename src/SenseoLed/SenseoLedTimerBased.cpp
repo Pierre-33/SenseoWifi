@@ -40,6 +40,7 @@ SenseoLedTimerBased::SenseoLedTimerBased(HomieNode & senseoNode, int pin)
 : ledPin(pin), senseoNode(senseoNode) 
 {
     assert(s_ledPin == -1); //you can't create two SenseoLedTimerBased instance or terrible things will most likely happen
+    pinMode(ledPin, INPUT_PULLUP);
     s_ledPin = ledPin;
 }
 

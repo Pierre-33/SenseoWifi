@@ -13,6 +13,10 @@ inline void testIO() {
   pinMode(ocPressRightPin, OUTPUT);
   pinMode(ocPressPowerPin, OUTPUT);
 
+  pinMode(ocSenseLedPin, INPUT_PULLUP);
+  pinMode(cupDetectorPin, INPUT_PULLUP); 
+  
+
   pinMode(beeperPin, OUTPUT);
 
   Serial.println("\n=================================");

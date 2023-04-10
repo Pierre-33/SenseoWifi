@@ -6,16 +6,19 @@
 
 #define REST 0
 
-String BuzzerComponent::getValidTunes() const
+const char * BuzzerComponent::getValidTunes()
 {
-    String validTunes;
-    for (const auto & item : musicLibrary)
+    static String s_validTunes; //It need to be static since we return a const char *
+    if (s_validTunes.isEmpty())
     {
-        if (!validTunes.isEmpty()) validTunes += ", ";
-        validTunes += item.first;
+        for (const auto & item : musicLibrary)
+        {
+            if (!s_validTunes.isEmpty()) s_validTunes += ",";
+            s_validTunes += item.first;
+        }
     }
 
-    return validTunes;
+    return s_validTunes.c_str();
 }
 
 bool BuzzerComponent::playMelody(const String & tune) 

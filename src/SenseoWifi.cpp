@@ -142,7 +142,7 @@ bool buzzerHandler(const HomieRange& range, const String& value)
     bool success = buzzerComponent->playMelody(value);
     if (!success) 
     {
-      String errorMsg = "buzzer: malformed message content. Allowed: [" + buzzerComponent->getValidTunes() + "]";
+      String errorMsg = String("buzzer: malformed message content. Allowed: [") + buzzerComponent->getValidTunes() + "]";
       senseoNode.setProperty("debug").send(errorMsg);
     }
     senseoNode.setProperty("buzzer").send("");
@@ -279,43 +279,28 @@ void setupHandler()
    /**
   * Homie: Advertise custom SenseoWifi MQTT topics
   */
-  senseoNode.advertise("debug").setName("Debugging Information").setDatatype("string").setRetained(false);
-  senseoNode.advertise("pendingCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
-  senseoNode.advertise("processedCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
-  senseoNode.advertise("opState").setName("Operational State").setDatatype("enum").setFormat("SENSEO_unknown,SENSEO_OFF,SENSEO_HEATING,SENSEO_READY,SENSEO_BREWING,SENSEO_NOWATER");
-  senseoNode.advertise("ledState").setName("Led State").setDatatype("enum").setFormat("LED_unknown,LED_OFF,LED_SLOW,LED_FAST,LED_ON");
-  senseoNode.advertise("power").setName("Power").setDatatype("boolean").settable(powerHandler);
-  senseoNode.advertise("brew").setName("Brew").settable(brewHandler).setDatatype("enum").setFormat("1cup,2cup");
-  senseoNode.advertise("brewedSize").setName("Brew Size").setDatatype("string").setRetained(false);
-  senseoNode.advertise("outOfWater").setName("Out of Water").setDatatype("boolean");
-  if (CupDetectorAvailableSetting.get()) 
-  {
-    senseoNode.advertise("cupAvailable").setName("Cup Available");
-    senseoNode.advertise("cupFull").setName("Cup Full");
-  }
-
   // configuring the state machine
   mySenseo.setup(mySenseoLed,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),UseCustomizableButtonsAddon.get());
 
-  if (mySenseo.getComponent<BuzzerComponent>() != nullptr) 
+  /*if (mySenseo.getComponent<BuzzerComponent>() != nullptr) 
   {
-    senseoNode.advertise("buzzer").setName("Buzzer").settable(buzzerHandler).setDatatype("enum").setFormat(mySenseo.getComponent<BuzzerComponent>()->getValidTunes().c_str());
+    //mySenseo.getComponent<BuzzerComponent>()->getValidTunes()
+    //senseoNode.advertise("buzzer").setName("Buzzer").settable(buzzerHandler).setDatatype("enum").setFormat("BlaBlaBla");
+    //senseoNode.getProperty("buzzer")->setFormat("blobloblo");
     Homie.getLogger() << "Advertising Buzzer" << endl;
-  }
+  }*/
     
 
   //configuring the button handler
   if (UseCustomizableButtonsAddon.get())
-  {
-    senseoNode.advertise("program1Cup").setName("Program1Cup").setDatatype("boolean").settable(program1CupHandler);
-    senseoNode.advertise("program2Cup").setName("Program2Cup").setDatatype("boolean").settable(program2CupHandler);
+  {    
     senseoNode.setProperty("program1Cup").send("false");
     senseoNode.setProperty("program2Cup").send("false");
   
 
     myInputbuttons = std::make_unique<SenseoInputButtons>(senseoButtonsInputPin);
     myInputbuttons->addButtonReleaseHandler(A0buttonPwr,50,togglePower);
-    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,7000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,9000,[]() { Homie.getLogger() << "Reset Senseo" << endl;/* Homie.reset();*/ });
     myInputbuttons->addButtonReleaseHandler(A0buttonPwr,2000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
     myInputbuttons->addButtonHoldHandler(A0buttonPwr,3000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
     myInputbuttons->addButtonHoldHandler(A0buttonPwr,5000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
@@ -428,6 +413,15 @@ void setup()
   Homie_setFirmware("senseo-wifi", "2.0");
   Homie_setBrand("SenseoWifi");
   //Homie.disableResetTrigger();
+
+  //setResetTrigger need to be call before the setup and therefor can't be based on the configuration variable
+  //TODO find a way to auto detect that without the use of configuration variable
+  if (false)
+  {
+    pinMode(resetButtonPin, INPUT_PULLUP);
+    Homie.setResetTrigger(resetButtonPin, LOW, 5000);
+  }
+
   Homie.disableLedFeedback();
   Homie.setSetupFunction(setupHandler);
   Homie.setLoopFunction(loopHandler);
@@ -437,18 +431,28 @@ void setup()
   */
   CupDetectorAvailableSetting.setDefaultValue(true);
   BuzzerSetting.setDefaultValue(false);
-  PublishHomeAssistantDiscoveryConfig.setDefaultValue(true);
-  UseCustomizableButtonsAddon.setDefaultValue(true);
+  PublishHomeAssistantDiscoveryConfig.setDefaultValue(false);
+  UseCustomizableButtonsAddon.setDefaultValue(false);
+
+  //Nodes apparently need to be configured before setup
+  //Unfortunately the config is only available after the setup so we'll end up configuring useless properties
+  senseoNode.advertise("buzzer").setName("Buzzer").settable(buzzerHandler).setDatatype("enum").setFormat(BuzzerComponent::getValidTunes());
+  senseoNode.advertise("debug").setName("Debugging Information").setDatatype("string").setRetained(false);
+  senseoNode.advertise("pendingCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
+  senseoNode.advertise("processedCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
+  senseoNode.advertise("opState").setName("Operational State").setDatatype("enum").setFormat("SENSEO_unknown,SENSEO_OFF,SENSEO_HEATING,SENSEO_READY,SENSEO_BREWING,SENSEO_NOWATER");
+  senseoNode.advertise("ledState").setName("Led State").setDatatype("enum").setFormat("LED_unknown,LED_OFF,LED_SLOW,LED_FAST,LED_ON");
+  senseoNode.advertise("power").setName("Power").setDatatype("boolean").settable(powerHandler);
+  senseoNode.advertise("brew").setName("Brew").settable(brewHandler).setDatatype("enum").setFormat("1cup,2cup");
+  senseoNode.advertise("brewedSize").setName("Brew Size").setDatatype("string").setRetained(false);
+  senseoNode.advertise("outOfWater").setName("Out of Water").setDatatype("boolean");
+  senseoNode.advertise("cupAvailable").setName("Cup Available");
+  senseoNode.advertise("cupFull").setName("Cup Full");
+  senseoNode.advertise("program1Cup").setName("Program1Cup").setDatatype("boolean").settable(program1CupHandler);
+  senseoNode.advertise("program2Cup").setName("Program2Cup").setDatatype("boolean").settable(program2CupHandler);
 
   Homie.onEvent(onHomieEvent);
   Homie.setup();
-
-  //TODO: test if I can move all setup things in the setup handler
-  if (!UseCustomizableButtonsAddon.get()) 
-  {
-    pinMode(resetButtonPin, INPUT_PULLUP);
-    Homie.setResetTrigger(resetButtonPin, LOW, 5000);
-  }
 }
 
 void loop() 

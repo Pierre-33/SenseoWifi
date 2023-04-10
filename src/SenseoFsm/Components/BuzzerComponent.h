@@ -11,7 +11,7 @@ class BuzzerComponent : public  FsmComponent<BuzzerComponent>
         void update();
         void beep();
 
-        String getValidTunes() const;
+        static const char * getValidTunes();
 
     private:
         ezBuzzer myBuzzer;

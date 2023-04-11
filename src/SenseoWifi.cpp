@@ -155,6 +155,36 @@ bool buzzerHandler(const HomieRange& range, const String& value)
   }
 }
 
+bool autoDetectCustomizableButtonsAddon()
+{
+  pinMode(senseoButtonsInputPin, INPUT);
+  int maxReading = 3;
+  int readingAverage = 0;
+  Homie.getLogger() << endl;
+  delay(50); //let's wait a bit for the ADC to be ready, the first reading is better that way
+  for (int i = 0; i < maxReading; i++)
+  {
+    int reading = analogRead(senseoButtonsInputPin);
+    Homie.getLogger() << "Reading " << i + 1 << ": A0 = " << reading << endl;
+    readingAverage += reading;
+    delay(50);
+  }
+
+  readingAverage /= maxReading;
+  Homie.getLogger() << "Average Reading: A0 = " << readingAverage << endl;
+
+  if (abs(A0defaultValue - readingAverage) <= 2)
+  {
+    Homie.getLogger() << "Customizable Buttons Addon detected" << endl;
+    return true;
+  }
+  else
+  {
+    Homie.getLogger() << "No Addon detected" << endl;
+    return false;
+  }
+}
+
 void publishHomeAssistandDiscoveryConfig()
 {
     Homie.getLogger() << endl << "Creating HomeAssistant entities..." << endl;
@@ -389,16 +419,6 @@ void setup()
     pinMode(cupDetectorPin, INPUT_PULLUP); 
   }*/
 
-  // pinMode(senseoButtonsInputPin, INPUT);  
-  // while (true) 
-  // {
-  //   Serial.print("A0 = ");
-  //   Serial.println(analogRead(senseoButtonsInputPin));
-  //   delay(50);
-  // }
-
-
-
   /**
   * Testing routine. Activate only in development environemt.
   * Tests the circuit and Senseo connections, loops indefinitely.
@@ -416,6 +436,7 @@ void setup()
 
   //setResetTrigger need to be call before the setup and therefor can't be based on the configuration variable
   //TODO find a way to auto detect that without the use of configuration variable
+  autoDetectCustomizableButtonsAddon();
   if (false)
   {
     pinMode(resetButtonPin, INPUT_PULLUP);

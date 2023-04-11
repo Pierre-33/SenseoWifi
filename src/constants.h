@@ -36,5 +36,6 @@ static const int A0buttonPwr = 147;
 static const int A0button1Cup = 429;
 static const int A0button2Cup = 711;
 static const int A0buttonThreeshold = 50;
+static const int A0defaultValue = 34;
 
 #endif

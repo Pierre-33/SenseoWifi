@@ -32,10 +32,14 @@ static const int LedIgnoreChangeDuration = 5;
 static const int pressDuration = 150;
 
 //Button threesholds for A0
-static const int A0buttonPwr = 147;
-static const int A0button1Cup = 429;
-static const int A0button2Cup = 711;
-static const int A0buttonThreeshold = 50;
+static const int A0buttonPwr = 952;
+static const int A0button1Cup = 733;
+static const int A0button2Cup = 895;
+static const int A0buttonPwr1Cup = 667;
+static const int A0buttonPwr1Cup2Cup = 592;
+static const int A0buttonPwr2Cup = 804;
+static const int A0button1Cup2Cup = 640;
+static const int A0buttonThreeshold = 25;
 static const int A0NoButtonPress = 1024;
 
 #endif

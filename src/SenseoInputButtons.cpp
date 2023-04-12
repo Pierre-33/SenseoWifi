@@ -25,7 +25,7 @@ void SenseoInputButtons::addButtonReleaseHandler(int buttonValue,unsigned long t
 
 bool SenseoInputButtons::hasHandler(int reading)
 {
-  if (reading <= A0buttonThreeshold) return true; //when no button is press, we don't need a handler
+  if (abs(A0NoButtonPress - reading) < A0buttonThreeshold) return true; //when no button is press, we don't need a handler
   for(const auto &handler: handlersByValue) 
   {
     if (abs(handler - reading) <= A0buttonThreeshold) return true;

@@ -347,6 +347,22 @@ void setupHandler()
     myInputbuttons->addButtonHoldHandler(A0button2Cup,3000,[]() { holdCupButtonHandler(ProgramComponent::twoCup); });
     myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
     */
+
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,50,[]() { Homie.getLogger() << "Toggle Power" << endl; });
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,9000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,2000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
+
+    myInputbuttons->addButtonReleaseHandler(A0button1Cup,50,[]() { Homie.getLogger() << "Short Release 1Cup" << endl; });
+    myInputbuttons->addButtonHoldHandler(A0button1Cup,2000,[]() { Homie.getLogger() << "Hold 1Cup" << endl; });
+    myInputbuttons->addButtonReleaseHandler(A0button1Cup,1000,[]() { Homie.getLogger() << "Long Release 1Cup" << endl; }); //this one is to prevent the BrewCup release to trigger
+
+    myInputbuttons->addButtonReleaseHandler(A0button2Cup,50,[]() { Homie.getLogger() << "Short Release 2Cup" << endl; });
+    myInputbuttons->addButtonHoldHandler(A0button2Cup,2000,[]() { Homie.getLogger() << "Hold 2Cup" << endl; });
+    myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { Homie.getLogger() << "Long Release 2Cup" << endl; }); //this one is to prevent the BrewCup release to trigger
+
+    myInputbuttons->addButtonPushHandler(A0button1Cup2Cup,[]() { Homie.getLogger() << "1Cup + 2Cup pressed" << endl; });
+    myInputbuttons->addButtonHoldHandler(A0button1Cup2Cup,1000,[]() { Homie.getLogger() << "1Cup + 2Cup hold" << endl; });
+    myInputbuttons->addButtonReleaseHandler(A0button1Cup2Cup,1000,[]() { Homie.getLogger() << "1Cup + 2Cup released" << endl; });
   }
 
   //EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));

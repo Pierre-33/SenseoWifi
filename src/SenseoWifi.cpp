@@ -173,7 +173,7 @@ bool autoDetectCustomizableButtonsAddon()
   readingAverage /= maxReading;
   Homie.getLogger() << "Average Reading: A0 = " << readingAverage << endl;
 
-  if (abs(A0defaultValue - readingAverage) <= 2)
+  if (abs(A0NoButtonPress - readingAverage) <= 3)
   {
     Homie.getLogger() << "Customizable Buttons Addon detected" << endl;
     return true;
@@ -329,8 +329,9 @@ void setupHandler()
   
 
     myInputbuttons = std::make_unique<SenseoInputButtons>(senseoButtonsInputPin);
+    /*
     myInputbuttons->addButtonReleaseHandler(A0buttonPwr,50,togglePower);
-    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,9000,[]() { Homie.getLogger() << "Reset Senseo" << endl;/* Homie.reset();*/ });
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,9000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
     myInputbuttons->addButtonReleaseHandler(A0buttonPwr,2000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
     myInputbuttons->addButtonHoldHandler(A0buttonPwr,3000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
     myInputbuttons->addButtonHoldHandler(A0buttonPwr,5000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
@@ -345,6 +346,7 @@ void setupHandler()
     myInputbuttons->addButtonHoldHandler(A0button2Cup,1000,[]() { holdCupButtonHandler(ProgramComponent::twoCup); });
     myInputbuttons->addButtonHoldHandler(A0button2Cup,3000,[]() { holdCupButtonHandler(ProgramComponent::twoCup); });
     myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
+    */
   }
 
   //EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));

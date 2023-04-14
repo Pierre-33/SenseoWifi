@@ -23,6 +23,7 @@ SenseoLed::SenseoLed(HomieNode & senseoNode, int pin)
   pinMode(ledPin, INPUT_PULLUP);
   assert(s_instance == nullptr); //You can't have two instance of this class
   s_instance = this;
+  senseoNode.setProperty("ledState").send(getStateAsString());
 }
 
 void SenseoLed::attachInterrupt()

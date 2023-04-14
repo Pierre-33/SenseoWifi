@@ -23,6 +23,10 @@ SenseoLed::SenseoLed(HomieNode & senseoNode, int pin)
   pinMode(ledPin, INPUT_PULLUP);
   assert(s_instance == nullptr); //You can't have two instance of this class
   s_instance = this;
+}
+
+void SenseoLed::onMqttReady()
+{
   senseoNode.setProperty("ledState").send(getStateAsString());
 }
 
@@ -78,7 +82,7 @@ void SenseoLed::updateState()
   }
   // decide if LED is not blinking but in a continuous state
   int t = (unsigned long)(millis() - ledChangeMillis);
-  if (( t > pulseContThreshold) && (t < 3 * pulseContThreshold)) 
+  if (( t > pulseContThreshold) && (t < 3 * pulseContThreshold || ledState == LED_unknown)) 
   {
     ledState = !digitalRead(ledPin) ? LED_ON : LED_OFF;
   }

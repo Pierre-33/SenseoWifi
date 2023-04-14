@@ -18,4 +18,5 @@ class ISenseoLed
     virtual void attachInterrupt() {}
     virtual void detachInterrupt() {}
     virtual void updateState() {} 
+    virtual void onMqttReady() {}
 };

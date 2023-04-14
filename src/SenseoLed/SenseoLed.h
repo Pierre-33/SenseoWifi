@@ -19,6 +19,7 @@ class SenseoLed : public ISenseoLed
     void detachInterrupt() override;
 
     void updateState() override;
+    void onMqttReady() override;
 
     ledStateEnum getState() const override;
     const char * getStateAsString() const override;

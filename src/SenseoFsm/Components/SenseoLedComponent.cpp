@@ -1,65 +1,80 @@
 #include "SenseoLedComponent.h"
 #include "Arduino.h"
 
-/*#include "Homie.h"
-#include "enums.h"
-#include "constants.h"*/
-
-
 SenseoLedComponent::SenseoLedComponent(int pLedPin) 
 {
   ledPin = pLedPin;
-  timestampChanged = millis();
   pinMode(ledPin, OUTPUT);  
-  digitalWrite(ledPin, LOW);  
+  setLedState(false);
 }
 
-void SenseoLedComponent::turnOn()
+void SenseoLedComponent::setLedState(bool state)
 {
-  milliOff = 0;
-  milliOn = 0;
-  if (currentState != true) 
-  {
-    digitalWrite(ledPin, HIGH);
-    currentState = true;
-    timestampChanged = millis();
-  }
-}
-
-void SenseoLedComponent::turnOff()
-{
-  milliOff = 0;
-  milliOn = 0;
-  if (currentState != false) 
-  {
-    digitalWrite(ledPin, LOW);
-    currentState = false;
-    timestampChanged = millis();
-  }
+  timestampChanged = millis();
+  currentLedState = state;
+  digitalWrite(ledPin, state ? HIGH : LOW);
 }
 
 void SenseoLedComponent::blink(unsigned long _milliOn, unsigned long _milliOff /*=0*/)
 {
   milliOn = _milliOn;
   milliOff = _milliOff > 0 ?  _milliOff : _milliOn;  
+  requestedState = RequestedState::Blink;
+}
+
+void SenseoLedComponent::burst(const std::vector<unsigned long> &_burstData) 
+{ 
+  burstPatern = _burstData; 
+  burstIndex = 0; 
 }
 
 void SenseoLedComponent::update()
 {
-  if (milliOn > 0 && milliOff > 0)
-  {
-    unsigned long currentMillis = millis();
-    if (currentState == true && currentMillis - timestampChanged >= milliOn)
+  unsigned long currentMillis = millis();
+  if (burstPatern.empty() == false)
+  {    
+    // the patern goes like this : { milliOn, milliOff, milliOn, etc... }
+    // so even burstIndex are milliOn and odd burstIndex are milliOff
+    if ((burstIndex % 2) == 0)
     {
-      digitalWrite(ledPin, LOW);
-      currentState = false;
-      timestampChanged = millis();
+      if (currentLedState == false) setLedState(true);
+      else if (currentMillis - timestampChanged >= burstPatern[burstIndex])
+      {
+        setLedState(false);
+        burstIndex++;
+      }
     }
-    else if (currentState == false && currentMillis - timestampChanged >= milliOff)
+    else
     {
-      digitalWrite(ledPin, HIGH);
-      currentState = true;
-      timestampChanged = millis();
+      if (currentLedState == true) setLedState(false);
+      else if (currentMillis - timestampChanged >= burstPatern[burstIndex])
+      {
+        setLedState(true);
+        burstIndex++;
+      }
+    }
+    if ((size_t)burstIndex >= burstPatern.size()) burstPatern.clear();
+  }
+  else 
+  {
+    switch (requestedState)
+    {
+      case RequestedState::Off:
+        setLedState(false);
+        break;
+      case RequestedState::On:
+        setLedState(true);
+        break;
+      case RequestedState::Blink:
+        if (currentLedState == true && currentMillis - timestampChanged >= milliOn)
+        {
+          setLedState(false);
+        }
+        else if (currentLedState == false && currentMillis - timestampChanged >= milliOff)
+        {
+          setLedState(true);
+        }
+        break;
     }
   }
 }

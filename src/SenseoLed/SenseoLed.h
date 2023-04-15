@@ -12,8 +12,8 @@ class HomieNode;
 
 class SenseoLed : public ISenseoLed
 {
-  public:
-    SenseoLed(HomieNode & senseoNode, int ledPin);
+public:
+    SenseoLed(HomieNode &senseoNode, int ledPin);
 
     void attachInterrupt() override;
     void detachInterrupt() override;
@@ -22,12 +22,12 @@ class SenseoLed : public ISenseoLed
     void onMqttReady() override;
 
     ledStateEnum getState() const override;
-    const char * getStateAsString() const override;
+    const char *getStateAsString() const override;
 
     void pinStateToggled();
 
-  private:
-    int getLastPulseDuration() const;    
+private:
+    int getLastPulseDuration() const;
     bool hasChanged() const;
 
     int ledPin;
@@ -36,7 +36,7 @@ class SenseoLed : public ISenseoLed
     unsigned long prevLedChangeMillis = 0;
     ledStateEnum ledState = LED_unknown;
     ledStateEnum ledStatePrev = LED_unknown;
-    HomieNode & senseoNode;
+    HomieNode &senseoNode;
 };
 
 #endif

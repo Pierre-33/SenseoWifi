@@ -1,3 +1,4 @@
+#include <Homie.h>
 #include "HomeAssistant.h"
 
 HomeAssistantDiscovery::HomeAssistantDiscovery()

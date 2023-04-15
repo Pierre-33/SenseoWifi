@@ -4,8 +4,7 @@ Created by Thomas Dietrich, 2016-03-05.
 Released under some license.
 */
 
-#ifndef SenseoPins_h
-#define SenseoPins_h
+#pragma once
 
 // circuit pin definitions      // PCB v1.6
 #define ocPressLeftPin D5       // T1
@@ -21,5 +20,3 @@ Released under some license.
 #define senseoButtonsInputPin A0  // 
 
 // Reset: D3 doesn't work (why?), D0 okay, D4 needs LED off
-
-#endif

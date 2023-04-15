@@ -4,16 +4,14 @@
   Released under some license.
 */
 
-#ifndef SenseoEnums_h
-#define SenseoEnums_h
+#pragma once
 
-enum senseoStateEnum {
-  SENSEO_unknown,
-  SENSEO_OFF,
-  SENSEO_HEATING,
-  SENSEO_READY,
-  SENSEO_BREWING,
-  SENSEO_NOWATER
+enum senseoStateEnum
+{
+    SENSEO_unknown,
+    SENSEO_OFF,
+    SENSEO_HEATING,
+    SENSEO_READY,
+    SENSEO_BREWING,
+    SENSEO_NOWATER
 };
-
-#endif

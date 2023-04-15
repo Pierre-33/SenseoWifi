@@ -300,7 +300,7 @@ void holdPowerButtonHandler()
     //I should not reach that code path without those component since the function is only called if the CustomizableButtonAddon has been detected
     if (programComponent && ledComponent)
     {
-      if (programComponent->hasAnyProgram()) programComponent->clearProgram(ProgramComponent::all);   
+      programComponent->clearProgram(ProgramComponent::all);   
       ledComponent->burst({100,100,100,100,100});     
       EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
     }

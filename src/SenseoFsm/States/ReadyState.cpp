@@ -21,7 +21,7 @@ void ReadyState::processBrewingCommand(CommandComponent::Command command)
     assert(command == CommandComponent::Brew1Cup || command == CommandComponent::Brew2Cup);
 
     // Let's check if we have a cup in place
-    if (cupComponent == nullptr || !(cupComponent->isNotAvailable() || cupComponent->isFull()))
+    if (cupComponent == nullptr || (cupComponent->isAvailable() && !cupComponent->isFull()))
     {
         if (command == CommandComponent::Brew1Cup) controlComponent->pressLeftButton();
         else if (command == CommandComponent::Brew2Cup) controlComponent->pressRightButton();

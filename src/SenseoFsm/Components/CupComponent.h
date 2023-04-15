@@ -9,20 +9,19 @@
 
 class HomieNode;
 
-class CupComponent : public  FsmComponent<CupComponent>
+class CupComponent : public FsmComponent<CupComponent>
 {
-  public:
-    CupComponent(HomieNode & node, int pin);
+public:
+    CupComponent(HomieNode &node, int pin);
     void update();
     void setFilling();
     void setFull();
-    bool isAvailable() const;
-    bool isNotAvailable() const;
-    bool isFilling() const;
-    bool isFull() const;
-    bool isEmpty() const;
-  private:
-    HomieNode & senseoNode;
+    bool isAvailable() const { return cupAvailable; }
+    bool isFilling() const { return cupFilling; }
+    bool isFull() const { return cupFull; }
+
+private:
+    HomieNode &senseoNode;
     int detectorPin;
     bool lastChangeValue = false;
     unsigned long lastChangeMillis = 0;

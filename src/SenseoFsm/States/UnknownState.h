@@ -2,13 +2,13 @@
 
 #include "SenseoState.h"
 
-class ISenseoLed;
+class ILedObserver;
 
 class UnknownState : public SenseoState
 {
     public:
         DECLARE_STATE("SENSEO_UNKNOWN");
-        UnknownState(const ISenseoLed & led, HomieNode & node) : SenseoState(led,node) {}
+        UnknownState(const ILedObserver & led, HomieNode & node) : SenseoState(led,node) {}
         virtual void onUpdate() override;
         virtual void onEnter(StateId previousState) override;
         virtual void onExit(StateId nextState) override;

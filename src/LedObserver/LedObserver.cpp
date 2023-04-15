@@ -1,22 +1,22 @@
 /*
-  SenseoLed.cpp - Library for the SenseoWifi project.
+  LedObserver.cpp - Library for the SenseoWifi project.
   Created by Thomas Dietrich, 2016-03-05.
   Released under some license.
 */
 
-#include "SenseoLed.h"
+#include "LedObserver.h"
 #include <Homie.h>
 #include <Arduino.h>
 #include "constants.h"
 
-static SenseoLed *s_instance = nullptr;
+static LedObserver *s_instance = nullptr;
 
 void IRAM_ATTR ledChangedHandler()
 {
     s_instance->pinStateToggled();
 }
 
-SenseoLed::SenseoLed(HomieNode &senseoNode, int pin)
+LedObserver::LedObserver(HomieNode &senseoNode, int pin)
     : ledPin(pin), senseoNode(senseoNode)
 {
     ledChangeMillis = millis();
@@ -25,22 +25,22 @@ SenseoLed::SenseoLed(HomieNode &senseoNode, int pin)
     s_instance = this;
 }
 
-void SenseoLed::onMqttReady()
+void LedObserver::onMqttReady()
 {
     senseoNode.setProperty("ledState").send(getStateAsString());
 }
 
-void SenseoLed::attachInterrupt()
+void LedObserver::attachInterrupt()
 {
     ::attachInterrupt(digitalPinToInterrupt(ledPin), ledChangedHandler, CHANGE);
 }
 
-void SenseoLed::detachInterrupt()
+void LedObserver::detachInterrupt()
 {
     ::detachInterrupt(digitalPinToInterrupt(ledPin));
 }
 
-void SenseoLed::pinStateToggled()
+void LedObserver::pinStateToggled()
 {
     unsigned long now = millis();
     if (now - ledChangeMillis <= LedIgnoreChangeDuration)
@@ -50,12 +50,12 @@ void SenseoLed::pinStateToggled()
     ledChanged = true;
 }
 
-int SenseoLed::getLastPulseDuration() const
+int LedObserver::getLastPulseDuration() const
 {
     return (ledChangeMillis - prevLedChangeMillis);
 }
 
-void SenseoLed::updateState()
+void LedObserver::updateState()
 {
     ledStatePrev = ledState;
     if (ledChanged)
@@ -96,18 +96,18 @@ void SenseoLed::updateState()
     }
 }
 
-bool SenseoLed::hasChanged() const
+bool LedObserver::hasChanged() const
 {
     // did the LED state change during last updateState() execution?
     return (ledStatePrev != ledState);
 }
 
-ledStateEnum SenseoLed::getState() const
+ledStateEnum LedObserver::getState() const
 {
     return ledState;
 }
 
-const char *SenseoLed::getStateAsString() const
+const char *LedObserver::getStateAsString() const
 {
     if (ledState == LED_OFF) return "LED_OFF";
     else if (ledState == LED_SLOW) return "LED_SLOW";

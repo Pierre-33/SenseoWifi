@@ -1,7 +1,7 @@
 #pragma once
 #include "SenseoState.h"
 
-class ISenseoLed;
+class ILedObserver;
 class HomieNode;
 class ProgramComponent;
 
@@ -9,7 +9,7 @@ class OffState : public SenseoState
 {
     public:
         DECLARE_STATE("SENSEO_OFF");
-        OffState(const ISenseoLed & led, HomieNode & node) : SenseoState(led,node) {}
+        OffState(const ILedObserver & led, HomieNode & node) : SenseoState(led,node) {}
         virtual void onInitialized() override;
         virtual void onEnter(StateId previousState) override;
         virtual void onExit(StateId nextState) override;

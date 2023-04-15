@@ -2,14 +2,14 @@
 #include "ModularFsm/ModularFsm.h"
 #include "Components/CommandComponent.h"
 
-class ISenseoLed;
+class ILedObserver;
 class HomieNode;
 
 class SenseoFsm : public ModularFsm
 {
     public:
         SenseoFsm(HomieNode & node) : ModularFsm() , senseoNode(node) {}
-        void setup(const ISenseoLed & led,bool useCupDetector, bool useBuzzer, bool useCustomizableButton);
+        void setup(const ILedObserver & led,bool useCupDetector, bool useBuzzer, bool useCustomizableButton);
         bool isOff();
 
         bool sendCommands(CommandComponent::CommandBitFields commands);
@@ -18,4 +18,5 @@ class SenseoFsm : public ModularFsm
 
     protected:
         HomieNode & senseoNode;
+        bool useCustomizableButtonAddon = false;
 };

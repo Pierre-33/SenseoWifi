@@ -3,7 +3,7 @@
 
 #include "SenseoFsm/Components/CommandComponent.h"
 
-class ISenseoLed;
+class ILedObserver;
 class HomieNode;
 class ControlComponent;
 class CupComponent;
@@ -11,7 +11,7 @@ class CupComponent;
 class SenseoState : public FsmState
 {    
     public:
-        SenseoState(const ISenseoLed & led, HomieNode & node) : senseoLed(led),senseoNode(node) {}
+        SenseoState(const ILedObserver & led, HomieNode & node) : senseoLed(led),senseoNode(node) {}
 
         void onInitialized() override;
 
@@ -23,7 +23,7 @@ class SenseoState : public FsmState
         void clearCommands(CommandComponent::CommandBitFields commands);
 
     protected:
-        const ISenseoLed & senseoLed;
+        const ILedObserver & senseoLed;
         HomieNode & senseoNode;
         CommandComponent * commandComponent = nullptr;    
         ControlComponent * controlComponent = nullptr; 

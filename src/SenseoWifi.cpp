@@ -20,8 +20,8 @@ Released under some license.
 
 #include "SenseoInputButtons.h"
 
-#include "SenseoLed/SenseoLedTimerBased.h"
-#include "SenseoLed/SenseoLed.h"
+#include "LedObserver/HwTimerLedObserver.h"
+#include "LedObserver/LedObserver.h"
 
 #ifdef EXECUTE_IF_COMPONENT_EXIST
 #undef EXECUTE_IF_COMPONENT_EXIST
@@ -39,8 +39,8 @@ HomieSetting<bool> PublishHomeAssistantDiscoveryConfig("homeassistantautodiscove
 bool useCustomizableButtonsAddon = false;
 
 SenseoFsm mySenseo(senseoNode);
-// SenseoLedTimerBased mySenseoLed(senseoNode,ocSenseLedPin);
-SenseoLed mySenseoLed(senseoNode, ocSenseLedPin);
+// HwTimerLedObserver mySenseoLed(senseoNode,ocSenseLedPin);
+LedObserver mySenseoLed(senseoNode, ocSenseLedPin);
 std::unique_ptr<SenseoInputButtons> myInputbuttons;
 
 /**

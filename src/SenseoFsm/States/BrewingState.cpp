@@ -1,7 +1,7 @@
 #include "BrewingState.h"
 #include <Homie.h>
 #include "constants.h"
-#include "SenseoLed/ISenseoLed.h"
+#include "LedObserver/ILedObserver.h"
 #include "NoWaterState.h"
 #include "ReadyState.h"
 #include "OffState.h"

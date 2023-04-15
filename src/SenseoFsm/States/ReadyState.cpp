@@ -1,5 +1,5 @@
 #include "ReadyState.h"
-#include "SenseoLed/ISenseoLed.h"
+#include "LedObserver/ILedObserver.h"
 #include "BrewingState.h"
 #include "NoWaterState.h"
 #include "OffState.h"
@@ -44,7 +44,7 @@ void ReadyState::onUpdate()
 
     if (ledState == LED_OFF)  changeState<OffState>();
     else if (hasOffCommands()) processOffCommands();
-    else if (ledState == LED_SLOW) changeState<BrewingState>(); //TODO overload this state and remove this statement when the Button addon is used
+    else if (ledState == LED_SLOW && useCustomizableButtonAddon) changeState<BrewingState>(); //With the customizable button addon, it's impossibble to reach brewing state without going through a command
     else if (ledState == LED_FAST) changeState<NoWaterState>();
     else if (hasPendingCommands(CommandComponent::Brew1Cup)) processBrewingCommand(CommandComponent::Brew1Cup);
     else if (hasPendingCommands(CommandComponent::Brew2Cup)) processBrewingCommand(CommandComponent::Brew2Cup);

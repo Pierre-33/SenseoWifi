@@ -17,8 +17,9 @@
 #include <Homie.h>
 
 
-void SenseoFsm::setup(const ISenseoLed & led,bool useCupDetector, bool useBuzzer, bool useCustomizableButton) 
+void SenseoFsm::setup(const ILedObserver & led,bool useCupDetector, bool useBuzzer, bool useCustomizableButton) 
 {
+    useCustomizableButtonAddon = useCustomizableButton;
     addComponent(std::make_unique<CommandComponent>(senseoNode));
     addComponent(std::make_unique<ProgramComponent>(senseoNode));
     addComponent(std::make_unique<ControlComponent>(ocPressPowerPin, ocPressLeftPin, ocPressRightPin));
@@ -26,13 +27,12 @@ void SenseoFsm::setup(const ISenseoLed & led,bool useCupDetector, bool useBuzzer
     if (useBuzzer) addComponent(std::make_unique<BuzzerComponent>(beeperPin));
     if (useCupDetector) addComponent(std::make_unique<CupComponent>(senseoNode,cupDetectorPin));
     if (useCustomizableButton) addComponent(std::make_unique<SenseoLedComponent>(senseoLedOutPin));
-    
 
     addState(std::make_unique<BrewingState>(led,senseoNode));
     addState(std::make_unique<HeatingState>(led,senseoNode));
     addState(std::make_unique<NoWaterState>(led,senseoNode));
     addState(std::make_unique<OffState>(led,senseoNode));
-    addState(std::make_unique<ReadyState>(led,senseoNode));
+    addState(std::make_unique<ReadyState>(led,senseoNode,useCustomizableButtonAddon));
     addState(std::make_unique<UnknownState>(led,senseoNode));
 
     setInitialState<UnknownState>();

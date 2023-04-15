@@ -1,19 +1,19 @@
 /*
-  SenseoLed.h - Library for the SenseoWifi project.
+  LedObserver.h - Library for the SenseoWifi project.
   Created by Thomas Dietrich, 2016-03-05.
   Released under some license.
 */
 #ifndef SenseoLed_h
 #define SenseoLed_h
 
-#include "ISenseoLed.h"
+#include "ILedObserver.h"
 
 class HomieNode;
 
-class SenseoLed : public ISenseoLed
+class LedObserver : public ILedObserver
 {
 public:
-    SenseoLed(HomieNode &senseoNode, int ledPin);
+    LedObserver(HomieNode &senseoNode, int ledPin);
 
     void attachInterrupt() override;
     void detachInterrupt() override;

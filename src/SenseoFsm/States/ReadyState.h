@@ -1,18 +1,18 @@
 #pragma once
 #include "SenseoState.h"
 
-class ISenseoLed;
+class ILedObserver;
 
 class ReadyState : public SenseoState
 {    
     public:
         DECLARE_STATE("SENSEO_READY");
         
-        ReadyState(const ISenseoLed & led, HomieNode & node) : SenseoState(led,node) {}
+        ReadyState(const ILedObserver & led, HomieNode & node, bool _useCustomizableButtonAddon) : SenseoState(led,node),useCustomizableButtonAddon(_useCustomizableButtonAddon) {}
         virtual void onEnter(StateId previousState) override;
-        //virtual void onExit(FsmComponentId nextState) override;
         virtual void onUpdate() override;
-    private:
+    protected:
         void processBrewingCommand(CommandComponent::Command command);
         bool waitingForACup = false;
+        bool useCustomizableButtonAddon;
 };

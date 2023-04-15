@@ -9,7 +9,7 @@ enum ledStateEnum : char // this garanty that accessing the enum is atomic (ie o
     LED_ON
 };
 
-class ISenseoLed
+class ILedObserver
 {
 public:
     virtual ledStateEnum getState() const = 0;

@@ -28,7 +28,7 @@ class FsmState
     protected:
         void changeState(StateId classId);
         template<class T> void changeState() { changeState(T::s_StateId); }
-        template<class T> T * getComponent() { return myFsm->getComponent<T>(); };
+        template<class T> T * getComponent() const { return myFsm->getComponent<T>(); };
 
     private:
         friend class ModularFsm;

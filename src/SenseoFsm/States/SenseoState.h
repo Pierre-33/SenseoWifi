@@ -6,6 +6,7 @@
 class ISenseoLed;
 class HomieNode;
 class ControlComponent;
+class CupComponent;
 
 class SenseoState : public FsmState
 {    
@@ -25,5 +26,6 @@ class SenseoState : public FsmState
         const ISenseoLed & senseoLed;
         HomieNode & senseoNode;
         CommandComponent * commandComponent = nullptr;    
-        ControlComponent * controlComponent = nullptr;    
+        ControlComponent * controlComponent = nullptr; 
+        CupComponent * cupComponent = nullptr;   
 };

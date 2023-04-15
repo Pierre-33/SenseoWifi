@@ -32,11 +32,11 @@ void CupComponent::update()
   {
     cupAvailable = value;
     cupFilling = false;
-    availableChanged = true;
+    senseoNode.setProperty("cupAvailable").send(isAvailable() ? "true" : "false");
     if (cupAvailable || (!cupAvailable && cupFull)) 
     {
       cupFull = false;
-      fullChanged = true;
+      senseoNode.setProperty("cupFull").send(isFull() ? "true" : "false");
     }
   }
 }
@@ -51,50 +51,30 @@ void CupComponent::setFull()
 {
   cupFilling = false;
   cupFull = true;
-  fullChanged = true;
+  senseoNode.setProperty("cupFull").send(isFull() ? "true" : "false");
 }
 
-bool CupComponent::isAvailableChanged() 
-{
-  if (availableChanged) 
-  {
-    availableChanged = false;
-    return true;
-  };
-  return false;
-}
-
-bool CupComponent::isFullChanged() 
-{
-  if (fullChanged) 
-  {
-    fullChanged = false;
-    return true;
-  };
-  return false;
-}
-
-bool CupComponent::isAvailable() 
+bool CupComponent::isAvailable() const
 {
   return cupAvailable;
 }
 
-bool CupComponent::isNotAvailable() 
+bool CupComponent::isNotAvailable() const
 {
   return !cupAvailable;
 }
 
-bool CupComponent::isFilling() 
+bool CupComponent::isFilling() const
 {
   return cupFilling;
 }
 
-bool CupComponent::isFull() 
+bool CupComponent::isFull() const
 {
   return cupFull;
 }
 
-bool CupComponent::isEmpty() 
+bool CupComponent::isEmpty() const
 {
   return !cupFull;
 }

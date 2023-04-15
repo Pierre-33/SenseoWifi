@@ -14,4 +14,7 @@ class BrewingState : public SenseoState
         virtual void onEnter(StateId previousState) override;
         virtual void onExit(StateId nextState) override;
         virtual void onUpdate() override;
+    
+    private:
+        bool brewingCancel = false;
 };

@@ -16,20 +16,16 @@ class CupComponent : public  FsmComponent<CupComponent>
     void update();
     void setFilling();
     void setFull();
-    bool isAvailableChanged();
-    bool isFullChanged();
-    bool isAvailable();
-    bool isNotAvailable();
-    bool isFilling();
-    bool isFull();
-    bool isEmpty();
+    bool isAvailable() const;
+    bool isNotAvailable() const;
+    bool isFilling() const;
+    bool isFull() const;
+    bool isEmpty() const;
   private:
     HomieNode & senseoNode;
     int detectorPin;
     bool lastChangeValue = false;
     unsigned long lastChangeMillis = 0;
-    bool availableChanged = false;
-    bool fullChanged = false;
     bool cupAvailable = false;
     bool cupFilling = false;
     bool cupFull = false;

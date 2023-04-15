@@ -3,14 +3,39 @@
 #include "BrewingState.h"
 #include "NoWaterState.h"
 #include "OffState.h"
+#include "homie.h"
 #include "../Components/BuzzerComponent.h"
 #include "../Components/SenseoLedComponent.h"
 #include "../Components/CommandComponent.h"
 #include "../Components/ControlComponent.h"
+#include "../Components/CupComponent.h"
 
 void ReadyState::onEnter(StateId previousState) 
 {
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,turnOn());
+    waitingForACup = false;
+}
+
+void ReadyState::processBrewingCommand(CommandComponent::Command command)
+{
+    assert(command == CommandComponent::Brew1Cup || command == CommandComponent::Brew2Cup);
+
+    // Let's check if we have a cup in place
+    if (cupComponent == nullptr || !(cupComponent->isNotAvailable() || cupComponent->isFull()))
+    {
+        if (command == CommandComponent::Brew1Cup) controlComponent->pressLeftButton();
+        else if (command == CommandComponent::Brew2Cup) controlComponent->pressRightButton();
+        else assert(!"Invalid command");
+
+        processCommands(command);
+        changeState<BrewingState>();  
+    }   
+    else if (!waitingForACup)
+    {
+        Homie.getLogger() << "Waiting for a cup" << endl;
+        senseoNode.setProperty("debug").send("Ready: waiting for cup"); 
+        waitingForACup = true;
+    }
 }
 
 void ReadyState::onUpdate() 
@@ -21,16 +46,6 @@ void ReadyState::onUpdate()
     else if (hasOffCommands()) processOffCommands();
     else if (ledState == LED_SLOW) changeState<BrewingState>(); //TODO overload this state and remove this statement when the Button addon is used
     else if (ledState == LED_FAST) changeState<NoWaterState>();
-    else if (hasPendingCommands(CommandComponent::Brew1Cup))
-    {
-        controlComponent->pressLeftButton();
-        processCommands(CommandComponent::Brew1Cup);
-        changeState<BrewingState>();        
-    }
-    else if (hasPendingCommands(CommandComponent::Brew2Cup))
-    {
-        controlComponent->pressRightButton();
-        processCommands(CommandComponent::Brew2Cup);
-        changeState<BrewingState>();
-    }
+    else if (hasPendingCommands(CommandComponent::Brew1Cup)) processBrewingCommand(CommandComponent::Brew1Cup);
+    else if (hasPendingCommands(CommandComponent::Brew2Cup)) processBrewingCommand(CommandComponent::Brew2Cup);
 }

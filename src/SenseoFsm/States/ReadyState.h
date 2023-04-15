@@ -13,5 +13,6 @@ class ReadyState : public SenseoState
         //virtual void onExit(FsmComponentId nextState) override;
         virtual void onUpdate() override;
     private:
-        //const SenseoLed & senseoLed;
+        void processBrewingCommand(CommandComponent::Command command);
+        bool waitingForACup = false;
 };

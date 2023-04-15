@@ -11,7 +11,7 @@
 void NoWaterState::onEnter(StateId previousState) 
 {
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(100));
-    EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,playMelody("melody2"));
+    //EXECUTE_IF_COMPONENT_EXIST(BuzzerComponent,playMelody("melody2"));
     senseoNode.setProperty("outOfWater").send("true");
 }
 

@@ -13,6 +13,7 @@ Released under some license.
 #include "HomeAssistant.h"
 #include "SenseoFsm/SenseoFsm.h"
 #include "SenseoFsm/Components/BuzzerComponent.h"
+#include "SenseoFsm/Components/SenseoLedComponent.h"
 #include "SenseoFsm/Components/CupComponent.h"
 #include "SenseoFsm/Components/programComponent.h"
 #include "ModularFsm/FsmState.h"
@@ -106,7 +107,7 @@ bool brewHandler(const HomieRange& range, const String& value)
   }
 
   //TODO: move that in the FSM once I implemented a command patern
-  CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
+  /*CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
   if (cupComponent != nullptr) 
   {
     if (cupComponent->isNotAvailable() || cupComponent->isFull()) 
@@ -114,7 +115,7 @@ bool brewHandler(const HomieRange& range, const String& value)
       senseoNode.setProperty("debug").send("brew: no or full cup present. Not executing.");
       return false;
     }
-  }
+  }*/
 
   if (value == "1cup" || value == "2cup")
   {
@@ -265,6 +266,7 @@ void onHomieEvent(const HomieEvent &event)
     {
       publishHomeAssistandDiscoveryConfig();
     }
+    mySenseoLed.onMqttReady();
     break;
 
   }
@@ -285,18 +287,31 @@ void togglePower()
 
 void holdCupButtonHandler(ProgramComponent::Program program)
 {
-  ProgramComponent * programComponent = mySenseo.getComponent<ProgramComponent>();
-  if (programComponent)
+  if (mySenseo.isOff())
   {
-    if (programComponent->hasAnyProgram())
+    ProgramComponent * programComponent = mySenseo.getComponent<ProgramComponent>();
+    SenseoLedComponent * ledComponent = mySenseo.getComponent<SenseoLedComponent>();
+    //I should not reach that code path without those component since the function is only called if the CustomizableButtonAddon has been detected
+    if (programComponent && ledComponent) 
     {
-      programComponent->clearProgram(ProgramComponent::all);
-      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
-    }
-    else
-    {
+      ledComponent->burst({100,100,100,100,100});
       programComponent->requestProgram(program);
-      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("programcup"));
+    }
+  }
+}
+
+void holdPowerButtonHandler()
+{
+  if (mySenseo.isOff())
+  {
+    ProgramComponent * programComponent = mySenseo.getComponent<ProgramComponent>();
+    SenseoLedComponent * ledComponent = mySenseo.getComponent<SenseoLedComponent>();
+    //I should not reach that code path without those component since the function is only called if the CustomizableButtonAddon has been detected
+    if (programComponent && ledComponent)
+    {
+      if (programComponent->hasAnyProgram()) programComponent->clearProgram(ProgramComponent::all);   
+      ledComponent->burst({100,100,100,100,100});     
+      EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
     }
   }
 }
@@ -310,16 +325,7 @@ void setupHandler()
   * Homie: Advertise custom SenseoWifi MQTT topics
   */
   // configuring the state machine
-  mySenseo.setup(mySenseoLed,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),UseCustomizableButtonsAddon.get());
-
-  /*if (mySenseo.getComponent<BuzzerComponent>() != nullptr) 
-  {
-    //mySenseo.getComponent<BuzzerComponent>()->getValidTunes()
-    //senseoNode.advertise("buzzer").setName("Buzzer").settable(buzzerHandler).setDatatype("enum").setFormat("BlaBlaBla");
-    //senseoNode.getProperty("buzzer")->setFormat("blobloblo");
-    Homie.getLogger() << "Advertising Buzzer" << endl;
-  }*/
-    
+  mySenseo.setup(mySenseoLed,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),UseCustomizableButtonsAddon.get());    
 
   //configuring the button handler
   if (UseCustomizableButtonsAddon.get())
@@ -348,21 +354,29 @@ void setupHandler()
     myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
     */
 
-    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,50,[]() { Homie.getLogger() << "Toggle Power" << endl; });
-    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,9000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
-    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,2000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
+    // Power Button
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,75,togglePower);
+    myInputbuttons->addButtonHoldHandler(A0buttonPwr,2000,holdPowerButtonHandler);
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,1000,[]() { }); //this one is to prevent the Power release to trigger
+  
 
-    myInputbuttons->addButtonReleaseHandler(A0button1Cup,50,[]() { Homie.getLogger() << "Short Release 1Cup" << endl; });
-    myInputbuttons->addButtonHoldHandler(A0button1Cup,2000,[]() { Homie.getLogger() << "Hold 1Cup" << endl; });
-    myInputbuttons->addButtonReleaseHandler(A0button1Cup,1000,[]() { Homie.getLogger() << "Long Release 1Cup" << endl; }); //this one is to prevent the BrewCup release to trigger
+    // Senseo Reset
+    myInputbuttons->addButtonHoldHandler(A0buttonPwr1Cup2Cup,2000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
+    myInputbuttons->addButtonHoldHandler(A0buttonPwr1Cup2Cup,3000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
+    myInputbuttons->addButtonHoldHandler(A0buttonPwr1Cup2Cup,4000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
+    myInputbuttons->addButtonReleaseHandler(A0buttonPwr1Cup2Cup,4000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
+    //myInputbuttons->addButtonReleaseHandler(A0buttonPwr1Cup2Cup,000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
 
-    myInputbuttons->addButtonReleaseHandler(A0button2Cup,50,[]() { Homie.getLogger() << "Short Release 2Cup" << endl; });
-    myInputbuttons->addButtonHoldHandler(A0button2Cup,2000,[]() { Homie.getLogger() << "Hold 2Cup" << endl; });
-    myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { Homie.getLogger() << "Long Release 2Cup" << endl; }); //this one is to prevent the BrewCup release to trigger
 
-    myInputbuttons->addButtonPushHandler(A0button1Cup2Cup,[]() { Homie.getLogger() << "1Cup + 2Cup pressed" << endl; });
-    myInputbuttons->addButtonHoldHandler(A0button1Cup2Cup,1000,[]() { Homie.getLogger() << "1Cup + 2Cup hold" << endl; });
-    myInputbuttons->addButtonReleaseHandler(A0button1Cup2Cup,1000,[]() { Homie.getLogger() << "1Cup + 2Cup released" << endl; });
+    // 1 cup
+    myInputbuttons->addButtonReleaseHandler(A0button1Cup,50,[]() { brewCup(CommandComponent::Brew1Cup); });
+    myInputbuttons->addButtonHoldHandler(A0button1Cup,2000,[]() { holdCupButtonHandler(ProgramComponent::oneCup); });
+    myInputbuttons->addButtonReleaseHandler(A0button1Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
+
+    //2 cup
+    myInputbuttons->addButtonReleaseHandler(A0button2Cup,50,[]() { brewCup(CommandComponent::Brew2Cup); });
+    myInputbuttons->addButtonHoldHandler(A0button2Cup,2000,[]() { holdCupButtonHandler(ProgramComponent::twoCup); });
+    myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
   }
 
   //EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
@@ -399,25 +413,6 @@ void loopHandler()
   * Update of the main state machine
   */
   mySenseo.update(millis());
-
-  //TODO : move that somewhere else, most likely in the Component update
-  /**
-  * Check and update the cup availability, based on the cup detector signal.
-  * (no cup, cup available, cup full)
-  */
- CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
-  if (cupComponent != nullptr) 
-  {
-    //myCup.updateState();
-    if (cupComponent->isAvailableChanged()) 
-    {
-      senseoNode.setProperty("cupAvailable").send(cupComponent->isAvailable() ? "true" : "false");
-    }
-    if (cupComponent->isFullChanged()) 
-    {
-      senseoNode.setProperty("cupFull").send(cupComponent->isFull() ? "true" : "false");
-    }
-  }  
 }
 
 void setup() 

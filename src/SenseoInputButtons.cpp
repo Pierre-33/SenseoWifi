@@ -23,14 +23,60 @@ void SenseoInputButtons::addButtonReleaseHandler(int buttonValue,unsigned long t
   handlersByValue.insert(buttonValue);
 }
 
-bool SenseoInputButtons::hasHandler(int reading)
+bool SenseoInputButtons::isReleased(int reading) const
 {
-  if (abs(A0NoButtonPress - reading) < A0buttonThreeshold) return true; //when no button is press, we don't need a handler
+  return abs(A0NoButtonPress - reading) < A0buttonThreeshold;
+}
+
+bool SenseoInputButtons::hasHandler(int reading) const
+{
+  if (isReleased(reading)) return true; //when no button is press, we don't need a handler
   for(const auto &handler: handlersByValue) 
   {
     if (abs(handler - reading) <= A0buttonThreeshold) return true;
   }
   return false;
+}
+
+void SenseoInputButtons::AddToDelayedReleaseHandler(ButtonHandler handler, unsigned long timeout)
+{
+  // first remove obsolete element
+  while (delayedReleaseHandlers.empty() == false)
+  {
+    auto & lastElement = delayedReleaseHandlers.back();
+    if (lastElement == nullptr || millis() > lastElement->timeToDiscard)
+    {
+      delayedReleaseHandlers.pop_back();
+    }
+    else break;
+  }
+
+  // then add our entry
+  unsigned long timeToDiscard = millis() + timeout;
+  delayedReleaseHandlers.push_back(std::make_unique<DelayedHandler>(DelayedHandler{handler,timeToDiscard}));
+}
+
+SenseoInputButtons::ButtonHandler SenseoInputButtons::findBestReleaseHandler(int reading) const
+{
+  const HandlerData * bestHandler = nullptr;
+  unsigned long releaseTime = lastReadingTime - lastReadingChangeTime;
+  for (const auto & handlerData: handlers) 
+  {
+    if (handlerData.type == ON_RELEASE && abs(handlerData.buttonValue - previousReading) <= A0buttonThreeshold) 
+    {
+      // we press the button long enough
+      if (releaseTime >= handlerData.time) 
+      {
+        // we want to trigger only the matching handler with the longest push time
+        if (bestHandler == nullptr || handlerData.time > bestHandler->time) 
+        {
+          bestHandler = &(handlerData);
+        }
+      }
+    }
+  }
+  if (bestHandler != nullptr) return bestHandler->handler;
+  else return nullptr;
 }
 
 void SenseoInputButtons::update()
@@ -44,32 +90,40 @@ void SenseoInputButtons::update()
   if (abs(previousReading - reading) > A0buttonThreeshold) 
   {
     //Manage push handlers
-    for(const auto & handlerData: handlers) 
+    //Push handlers should only be triggered if the previous reading was "released"
+    //This is to avoid triggering push handler when you from A+B pressed to only A
+    if (isReleased(previousReading))
     {
-        if (handlerData.type == ON_PUSH && abs(handlerData.buttonValue - reading) <= A0buttonThreeshold) handlerData.handler();
+      for(const auto & handlerData: handlers) 
+      {
+          if (handlerData.type == ON_PUSH && abs(handlerData.buttonValue - reading) <= A0buttonThreeshold) handlerData.handler();
+      }  
     }
 
     //Manage release handlers
-    if (previousReading > A0buttonThreeshold && reading <= A0buttonThreeshold) 
+    if (isReleased(previousReading) == false)
     {
-      const HandlerData * bestHandler = nullptr;
-      unsigned long releaseTime = lastReadingTime - lastReadingChangeTime;
-      for (const auto & handlerData: handlers) 
+      ButtonHandler releaseHandler = findBestReleaseHandler(previousReading);
+      if (isReleased(reading) == true) 
       {
-        if (handlerData.type == ON_RELEASE && abs(handlerData.buttonValue - previousReading) <= A0buttonThreeshold) 
+        if (releaseHandler != nullptr) releaseHandler();
+
+        // Let's trigger delayed handlers
+        for (auto & delayedHandler: delayedReleaseHandlers) 
         {
-          // we press the button long enough
-          if (releaseTime >= handlerData.time) 
+          if (delayedHandler && millis() < delayedHandler->timeToDiscard)
           {
-            // we want to trigger only the matching handler with the longest push time
-            if (bestHandler == nullptr || handlerData.time > bestHandler->time) 
-            {
-              bestHandler = &(handlerData);
-            }
+            delayedHandler->handler();
+            delayedHandler = nullptr;
           }
         }
       }
-      if (bestHandler != nullptr) bestHandler->handler();
+      else 
+      {
+        // When you release A+B you usually don't go straight to no reading but instead usually briefly pass by A
+        // In that case we store the release handler, and if we go to no reading fast enough, we trigger the handler
+        if (releaseHandler != nullptr) AddToDelayedReleaseHandler(releaseHandler,100);
+      }
     }
 
     lastReadingChangeTime = lastReadingTime; // need to stay at the end of the "if"

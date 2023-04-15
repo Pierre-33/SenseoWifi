@@ -16,18 +16,30 @@ void BrewingState::onEnter(StateId previousState)
 {
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(2000,500));
 
-    CupComponent * cupComponent = getComponent<CupComponent>();
     if (cupComponent != nullptr) 
     {
+        // I'm not sure if that can really happen, I just let it here because if was here before me
         if (cupComponent->isAvailable()) cupComponent->setFilling();
         else senseoNode.setProperty("debug").send("cup: Brewing without detected cup, will not report the filling->full process.");
     }
     senseoNode.setProperty("brew").send("true");
     senseoNode.setProperty("brewedSize").send("0");
+    brewingCancel = false;
 }
 void BrewingState::onUpdate() 
 {
     ledStateEnum ledState = senseoLed.getState();
+
+    // Stop Brewing if the cup is gone
+    if (cupComponent != nullptr && !cupComponent->isAvailable() && !brewingCancel) 
+    {
+        brewingCancel = true;
+
+        Homie.getLogger() << "The cup is gone, Brewing cancel." << endl;
+        senseoNode.setProperty("debug").send("The cup is gone, Brewing cancel.");
+        clearCommands(CommandComponent::All);
+        commandComponent->sendCommands(CommandComponent::TurnOff);
+    }
 
     if (ledState == LED_OFF)  changeState<OffState>();
     else if (hasOffCommands()) processOffCommands();
@@ -72,7 +84,6 @@ void BrewingState::onExit(StateId nextState)
     {
         senseoNode.setProperty("debug").send("brew: Unexpected time in SENSEO_BREWING state. Please adapt timings.");
     }
-    CupComponent * cupComponent = getComponent<CupComponent>();
     if (cupComponent != nullptr) 
     {
         if (cupComponent->isFilling()) cupComponent->setFull();

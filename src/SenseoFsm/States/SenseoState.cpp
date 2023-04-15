@@ -3,6 +3,7 @@
 
 #include "../Components/ControlComponent.h"
 #include "../Components/SenseoLedComponent.h"
+#include "../Components/CupComponent.h"
 
 void SenseoState::onInitialized()
 {
@@ -10,6 +11,9 @@ void SenseoState::onInitialized()
     controlComponent = getComponent<ControlComponent>();
     assert(commandComponent != nullptr);
     assert(controlComponent != nullptr);
+
+    // the CupComponent is optional
+    cupComponent = getComponent<CupComponent>();
 }
 
 bool SenseoState::hasOffCommands() const

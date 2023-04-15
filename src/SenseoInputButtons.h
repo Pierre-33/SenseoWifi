@@ -43,7 +43,17 @@ class SenseoInputButtons
       ButtonHandler handler;
       unsigned long time = 0; //use for Hold and Release Handler
     };
-    bool hasHandler(int reading);
+
+    struct DelayedHandler
+    {
+      ButtonHandler handler;
+      unsigned long timeToDiscard;
+    };
+
+    bool hasHandler(int reading) const;
+    bool isReleased(int reading) const;
+    ButtonHandler findBestReleaseHandler(int reading) const;
+    void AddToDelayedReleaseHandler(ButtonHandler handler, unsigned long timeout);
     unsigned long lastReadingTime = 0;
     unsigned long lastReadingChangeTime = 0;
     int analogPin;
@@ -51,4 +61,5 @@ class SenseoInputButtons
 
     std::set<int> handlersByValue;
     std::vector<HandlerData> handlers;
+    std::vector<std::unique_ptr<DelayedHandler>> delayedReleaseHandlers;
 };

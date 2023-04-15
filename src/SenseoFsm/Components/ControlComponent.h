@@ -11,16 +11,17 @@
  * SenseoControl includes all functions hardware control specific.
  * At the time of this writing, this is mainly "pressing" the buttons.
  */
-class ControlComponent : public  FsmComponent<ControlComponent>
+class ControlComponent : public FsmComponent<ControlComponent>
 {
-  public:
+public:
     ControlComponent(int pBPin, int lBPin, int rBPin);
     void pressPowerButton();
     void pressLeftButton();
     void pressRightButton();
     void pressLeftRightButton();
     void update();
-  private:
+
+private:
     /** The time one/the last button was pressed. '0' means no button is currently pressed */
     unsigned long timestampPressed = 0;
     int powerButtonPin;

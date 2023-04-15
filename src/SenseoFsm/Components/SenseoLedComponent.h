@@ -7,7 +7,7 @@
  */
 class SenseoLedComponent : public FsmComponent<SenseoLedComponent>
 {
-  public:
+public:
     SenseoLedComponent(int pLedPin);
     void update();
     void turnOn() { requestedState = RequestedState::On; }
@@ -16,12 +16,17 @@ class SenseoLedComponent : public FsmComponent<SenseoLedComponent>
 
     // _burstPatern goes like that : { milliOn,milliOff,milliOn,... }
     // on the burst is complete, the led return to normal operation
-    void burst(const std::vector<unsigned long> &_burstPatern); 
+    void burst(const std::vector<unsigned long> &_burstPatern);
 
-  private:
+private:
     void setLedState(bool state);
 
-    enum class RequestedState { On,Off,Blink };    
+    enum class RequestedState
+    {
+        On,
+        Off,
+        Blink
+    };
 
     std::vector<unsigned long> burstPatern;
     int burstIndex = 0;

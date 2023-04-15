@@ -9,12 +9,14 @@ Released under some license.
 #include "Homie.h"
 #include "constants.h"
 
-
 CupComponent::CupComponent(HomieNode & node, int pin)
 : senseoNode(node), detectorPin(pin)
 {
   pinMode(detectorPin, INPUT_PULLUP); 
   cupAvailable = !digitalRead(detectorPin);
+
+  senseoNode.setProperty("cupAvailable").send(isAvailable() ? "true" : "false");
+  senseoNode.setProperty("cupFull").send(isFull() ? "true" : "false");
 }
 
 void CupComponent::update() 

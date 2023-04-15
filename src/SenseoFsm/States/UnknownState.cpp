@@ -1,3 +1,5 @@
+#include <Homie.h>
+
 #include "UnknownState.h"
 #include "SenseoLed/ISenseoLed.h"
 #include "HeatingState.h"
@@ -11,6 +13,10 @@ void UnknownState::onEnter(StateId previousState)
 {
     clearCommands(CommandComponent::All);
     EXECUTE_IF_COMPONENT_EXIST(SenseoLedComponent,blink(200,1000));
+
+    senseoNode.setProperty("outOfWater").send("false");
+    senseoNode.setProperty("brew").send("false");
+    senseoNode.setProperty("debug").send("Machine started");
 }
 
 void UnknownState::onExit(StateId nextState)

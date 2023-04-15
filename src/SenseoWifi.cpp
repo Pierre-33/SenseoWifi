@@ -11,13 +11,15 @@ Released under some license.
 #include "constants.h"
 #include "testIO.cpp"
 #include "HomeAssistant.h"
+
 #include "SenseoFsm/SenseoFsm.h"
 #include "SenseoFsm/Components/BuzzerComponent.h"
 #include "SenseoFsm/Components/SenseoLedComponent.h"
-#include "SenseoFsm/Components/CupComponent.h"
+#include "SenseoFsm/Components/ControlComponent.h"
 #include "SenseoFsm/Components/programComponent.h"
-#include "ModularFsm/FsmState.h"
+
 #include "SenseoInputButtons.h"
+
 #include "SenseoLed/SenseoLedTimerBased.h"
 #include "SenseoLed/SenseoLed.h"
 
@@ -30,7 +32,7 @@ HomieNode senseoNode("machine", "senseo-wifi", "senseo-wifi");
 HomieSetting<bool> CupDetectorAvailableSetting("cupdetector", "Enable cup detection (TCRT5000)");
 HomieSetting<bool> BuzzerSetting("buzzer", "Enable buzzer sounds (no water, cup finished, ...)");
 HomieSetting<bool> PublishHomeAssistantDiscoveryConfig("homeassistantautodiscovery", "Publish HomeAssistant discovery config, ...)");
-HomieSetting<bool> UseCustomizableButtonsAddon("usecustomizablebuttonsaddon", "Use the additional pcb to customize button behavior, ...)");
+bool useCustomizableButtonsAddon = false;
 
 SenseoFsm mySenseo(senseoNode);
 //SenseoLedTimerBased mySenseoLed(senseoNode,ocSenseLedPin); 
@@ -106,17 +108,6 @@ bool brewHandler(const HomieRange& range, const String& value)
     return false;
   }
 
-  //TODO: move that in the FSM once I implemented a command patern
-  /*CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
-  if (cupComponent != nullptr) 
-  {
-    if (cupComponent->isNotAvailable() || cupComponent->isFull()) 
-    {
-      senseoNode.setProperty("debug").send("brew: no or full cup present. Not executing.");
-      return false;
-    }
-  }*/
-
   if (value == "1cup" || value == "2cup")
   {
     CommandComponent::CommandBitFields commands = value == "1cup" ? CommandComponent::Brew1Cup : CommandComponent::Brew2Cup;
@@ -125,8 +116,8 @@ bool brewHandler(const HomieRange& range, const String& value)
   }
   else if (value == "descale") 
   {
-    assert(!"not implemented");
-    //myControl.pressLeftRightButton();
+    Homie.getLogger() << "!! Warning, descale has not been propertly tested and might messed up with the state machine !!" << endl;
+    mySenseo.getComponent<ControlComponent>()->pressLeftRightButton();
   }
   return true;
 }
@@ -227,7 +218,7 @@ void publishHomeAssistandDiscoveryConfig()
     //switch
     success = ha.publishSwitchConfig("Power","power",{{"icon","mdi:power"}});    
     Homie.getLogger() << "power: " << (success ? "success" : "failed") << endl;
-    if (UseCustomizableButtonsAddon.get())
+    if (useCustomizableButtonsAddon)
     {
       success = ha.publishSwitchConfig("Program 1 Cup","program1Cup",{{"icon","mdi:coffee"}});    
       Homie.getLogger() << "program1Cup: " << (success ? "success" : "failed") << endl;
@@ -320,45 +311,22 @@ void holdPowerButtonHandler()
 *
 */
 void setupHandler() 
-{
-   /**
-  * Homie: Advertise custom SenseoWifi MQTT topics
-  */
+{   
   // configuring the state machine
-  mySenseo.setup(mySenseoLed,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),UseCustomizableButtonsAddon.get());    
+  mySenseo.setup(mySenseoLed,CupDetectorAvailableSetting.get(),BuzzerSetting.get(),useCustomizableButtonsAddon);    
 
   //configuring the button handler
-  if (UseCustomizableButtonsAddon.get())
+  if (useCustomizableButtonsAddon)
   {    
     senseoNode.setProperty("program1Cup").send("false");
     senseoNode.setProperty("program2Cup").send("false");
-  
 
     myInputbuttons = std::make_unique<SenseoInputButtons>(senseoButtonsInputPin);
-    /*
-    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,50,togglePower);
-    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,9000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
-    myInputbuttons->addButtonReleaseHandler(A0buttonPwr,2000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
-    myInputbuttons->addButtonHoldHandler(A0buttonPwr,3000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
-    myInputbuttons->addButtonHoldHandler(A0buttonPwr,5000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
-    myInputbuttons->addButtonHoldHandler(A0buttonPwr,7000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("mario")); });
-
-    myInputbuttons->addButtonReleaseHandler(A0button1Cup,50,[]() { brewCup(CommandComponent::Brew1Cup); });
-    myInputbuttons->addButtonHoldHandler(A0button1Cup,1000,[]() { holdCupButtonHandler(ProgramComponent::oneCup); });
-    myInputbuttons->addButtonHoldHandler(A0button1Cup,3000,[]() { holdCupButtonHandler(ProgramComponent::oneCup); });
-    myInputbuttons->addButtonReleaseHandler(A0button1Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
-
-    myInputbuttons->addButtonReleaseHandler(A0button2Cup,50,[]() { brewCup(CommandComponent::Brew2Cup); });
-    myInputbuttons->addButtonHoldHandler(A0button2Cup,1000,[]() { holdCupButtonHandler(ProgramComponent::twoCup); });
-    myInputbuttons->addButtonHoldHandler(A0button2Cup,3000,[]() { holdCupButtonHandler(ProgramComponent::twoCup); });
-    myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
-    */
 
     // Power Button
     myInputbuttons->addButtonReleaseHandler(A0buttonPwr,75,togglePower);
     myInputbuttons->addButtonHoldHandler(A0buttonPwr,2000,holdPowerButtonHandler);
     myInputbuttons->addButtonReleaseHandler(A0buttonPwr,1000,[]() { }); //this one is to prevent the Power release to trigger
-  
 
     // Senseo Reset
     myInputbuttons->addButtonHoldHandler(A0buttonPwr1Cup2Cup,2000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
@@ -366,7 +334,6 @@ void setupHandler()
     myInputbuttons->addButtonHoldHandler(A0buttonPwr1Cup2Cup,4000,[]() { EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep")); });
     myInputbuttons->addButtonReleaseHandler(A0buttonPwr1Cup2Cup,4000,[]() { Homie.getLogger() << "Reset Senseo" << endl; });
     //myInputbuttons->addButtonReleaseHandler(A0buttonPwr1Cup2Cup,000,[]() { Homie.getLogger() << "Reset Canceled" << endl; });
-
 
     // 1 cup
     myInputbuttons->addButtonReleaseHandler(A0button1Cup,50,[]() { brewCup(CommandComponent::Brew1Cup); });
@@ -379,21 +346,8 @@ void setupHandler()
     myInputbuttons->addButtonReleaseHandler(A0button2Cup,1000,[]() { }); //this one is to prevent the BrewCup release to trigger
   }
 
-  //EXECUTE_IF_COMPONENT_EXIST(mySenseo,BuzzerComponent,playMelody("beep"));
-
-  Homie.getLogger() << endl << "☕☕☕☕ Enjoy your SenseoWifi ☕☕☕☕" << endl << endl;
-
-  //Do we really need that? The Fsm should properly send the information on it's first update
-  //senseoNode.setProperty("opState").send(UnknownState::s_StateName);
-  CupComponent * cupComponent = mySenseo.getComponent<CupComponent>();
-  if (cupComponent != nullptr) 
-  {
-    senseoNode.setProperty("cupAvailable").send(cupComponent->isAvailable() ? "true" : "false");
-    senseoNode.setProperty("cupFull").send(cupComponent->isFull() ? "true" : "false");
-  }
-  senseoNode.setProperty("outOfWater").send("false");
-  senseoNode.setProperty("brew").send("false");
-  senseoNode.setProperty("debug").send("Machine started");
+  senseoNode.setProperty("buttonsAddon").send(useCustomizableButtonsAddon ? "true" : "false");
+  Homie.getLogger() << endl << "☕☕☕☕ Enjoy your SenseoWifi ☕☕☕☕" << endl << endl;  
 }
 
 /**
@@ -407,6 +361,9 @@ void loopHandler()
   */
   mySenseoLed.updateState();
 
+  /**
+  * Update the inputButtons if the CustomizableButtonAddon has been detected
+  */
   if (myInputbuttons) myInputbuttons->update();
 
   /**
@@ -418,19 +375,6 @@ void loopHandler()
 void setup() 
 {
   Serial.begin(115200);
-
-  /**
-  * Wemos D1 mini pin initializations
-  */
-
-  //TODO: move those initialization in their respective component
-  //pinMode(ocSenseLedPin, INPUT_PULLUP);
-
-  // it seems at this point Homie configuration variable are not set
-  /*if (CupDetectorAvailableSetting.get()) 
-  {
-    pinMode(cupDetectorPin, INPUT_PULLUP); 
-  }*/
 
   /**
   * Testing routine. Activate only in development environemt.
@@ -445,13 +389,13 @@ void setup()
   */
   Homie_setFirmware("senseo-wifi", "2.0");
   Homie_setBrand("SenseoWifi");
-  //Homie.disableResetTrigger();
 
-  //setResetTrigger need to be call before the setup and therefor can't be based on the configuration variable
+  
   //TODO find a way to auto detect that without the use of configuration variable
-  autoDetectCustomizableButtonsAddon();
-  if (false)
+  useCustomizableButtonsAddon = autoDetectCustomizableButtonsAddon();
+  if (!useCustomizableButtonsAddon)
   {
+    // setResetTrigger need to be call before the setup and therefor can't be based on the configuration variable
     pinMode(resetButtonPin, INPUT_PULLUP);
     Homie.setResetTrigger(resetButtonPin, LOW, 5000);
   }
@@ -463,13 +407,15 @@ void setup()
   /**
   * Homie: Options, see at the top of this file.
   */
-  CupDetectorAvailableSetting.setDefaultValue(true);
+  CupDetectorAvailableSetting.setDefaultValue(false);
   BuzzerSetting.setDefaultValue(false);
   PublishHomeAssistantDiscoveryConfig.setDefaultValue(false);
-  UseCustomizableButtonsAddon.setDefaultValue(false);
 
-  //Nodes apparently need to be configured before setup
-  //Unfortunately the config is only available after the setup so we'll end up configuring useless properties
+  /**
+  * Homie: Advertise custom SenseoWifi MQTT topics
+  * Nodes apparently need to be configured before setup
+  * Unfortunately the config is only available after the setup so we'll end up configuring useless properties
+  */
   senseoNode.advertise("buzzer").setName("Buzzer").settable(buzzerHandler).setDatatype("enum").setFormat(BuzzerComponent::getValidTunes());
   senseoNode.advertise("debug").setName("Debugging Information").setDatatype("string").setRetained(false);
   senseoNode.advertise("pendingCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
@@ -481,9 +427,10 @@ void setup()
   senseoNode.advertise("brewedSize").setName("Brew Size").setDatatype("string").setRetained(false);
   senseoNode.advertise("outOfWater").setName("Out of Water").setDatatype("boolean");
   senseoNode.advertise("cupAvailable").setName("Cup Available");
-  senseoNode.advertise("cupFull").setName("Cup Full");
+  senseoNode.advertise("cupFull").setName("Cup Full");  
   senseoNode.advertise("program1Cup").setName("Program1Cup").setDatatype("boolean").settable(program1CupHandler);
   senseoNode.advertise("program2Cup").setName("Program2Cup").setDatatype("boolean").settable(program2CupHandler);
+  senseoNode.advertise("buttonsAddon").setName("Use Customizable Buttons Addon").setDatatype("boolean");
 
   Homie.onEvent(onHomieEvent);
   Homie.setup();

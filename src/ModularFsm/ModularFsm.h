@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <map>
 #include "FsmComponentId.h"
-#include "FsmStateId.h"
+#include "ModularFsm/FsmState.h"
 
 class BaseFsmComponent;
 class FsmState;
@@ -44,10 +44,12 @@ class ModularFsm
             }
         }
 
-        template<class T> T * getComponent() 
+        template<class T> T * getComponent() { return (T*)getComponent(T::getClassId()); }
+
+        BaseFsmComponent * getComponent(FsmComponentId classId)
         {
-            auto iter = components.find(T::getClassId());
-            if (iter != components.end()) return (T*)iter->second.get();
+            auto iter = components.find(classId);
+            if (iter != components.end()) return iter->second.get();
             else return nullptr;
         }
         
@@ -79,5 +81,4 @@ class ModularFsm
 
         std::map<FsmComponentId,std::unique_ptr<BaseFsmComponent>> components;
         std::map<StateId,std::unique_ptr<FsmState>> states;
-
 };

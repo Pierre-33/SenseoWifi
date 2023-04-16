@@ -61,15 +61,6 @@ void HwTimerLedObserver::detachInterrupt()
     timer1_disable();
 }
 
-const char *HwTimerLedObserver::getStateAsString() const
-{
-    if (s_ledState == LED_OFF) return "LED_OFF";
-    else if (s_ledState == LED_SLOW) return "LED_SLOW";
-    else if (s_ledState == LED_FAST) return "LED_FAST";
-    else if (s_ledState == LED_ON) return "LED_ON";
-    else return "LED_unknown";
-}
-
 void HwTimerLedObserver::updateState()
 {
     /*static int lastPulseDuration = 0;

@@ -17,25 +17,19 @@ public:
 
     void attachInterrupt() override;
     void detachInterrupt() override;
-
-    void updateState() override;
     void onMqttReady() override;
 
-    ledStateEnum getState() const override;
-    const char *getStateAsString() const override;
+    void updateState() override;    
 
-    void pinStateToggled();
+    ledStateEnum getState() const override;
 
 private:
-    int getLastPulseDuration() const;
-    bool hasChanged() const;
+    static void ledChangedIsr();
 
     int ledPin;
-    bool ledChanged = false;
-    unsigned long ledChangeMillis;
-    unsigned long prevLedChangeMillis = 0;
-    ledStateEnum ledState = LED_unknown;
-    ledStateEnum ledStatePrev = LED_unknown;
+    unsigned long lastUpdateMillis = 0;
+    int lastPulseDuration = 0;
+    ledStateEnum ledState = LED_unknown;    
     HomieNode &senseoNode;
 };
 

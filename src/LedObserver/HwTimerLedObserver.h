@@ -15,7 +15,6 @@ public:
     virtual void attachInterrupt() override;
     virtual void detachInterrupt() override;
     virtual ledStateEnum getState() const override;
-    virtual const char *getStateAsString() const override;
     virtual void updateState() override;
 
 private:

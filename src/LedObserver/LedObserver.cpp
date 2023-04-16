@@ -9,20 +9,31 @@
 #include <Arduino.h>
 #include "constants.h"
 
-static LedObserver *s_instance = nullptr;
+// variable used both inside and outside the ISR should be volatile as they could be modified from outside the current code path
+volatile static unsigned long s_ledChangeMillis = 0;
+volatile static int s_pulseDuration = 0;    
 
-void IRAM_ATTR ledChangedHandler()
+void IRAM_ATTR LedObserver::ledChangedIsr()
 {
-    s_instance->pinStateToggled();
+    unsigned long now = millis();
+    if (now - s_ledChangeMillis <= LedIgnoreChangeDuration)
+        return; // simple debouncer
+
+    s_pulseDuration = now - s_ledChangeMillis;    
+    s_ledChangeMillis = now;
 }
 
 LedObserver::LedObserver(HomieNode &senseoNode, int pin)
     : ledPin(pin), senseoNode(senseoNode)
-{
-    ledChangeMillis = millis();
+{   
+    // just here to avoid two instance of the class at the same time for now
+    // could be moved to a static member if this need to be access from a static method
+    static LedObserver * s_instance = nullptr; 
+
     pinMode(ledPin, INPUT_PULLUP);
     assert(s_instance == nullptr); // You can't have two instance of this class
     s_instance = this;
+    s_ledChangeMillis = millis();
 }
 
 void LedObserver::onMqttReady()
@@ -32,7 +43,7 @@ void LedObserver::onMqttReady()
 
 void LedObserver::attachInterrupt()
 {
-    ::attachInterrupt(digitalPinToInterrupt(ledPin), ledChangedHandler, CHANGE);
+    ::attachInterrupt(digitalPinToInterrupt(ledPin), LedObserver::ledChangedIsr, CHANGE);
 }
 
 void LedObserver::detachInterrupt()
@@ -40,29 +51,21 @@ void LedObserver::detachInterrupt()
     ::detachInterrupt(digitalPinToInterrupt(ledPin));
 }
 
-void LedObserver::pinStateToggled()
-{
-    unsigned long now = millis();
-    if (now - ledChangeMillis <= LedIgnoreChangeDuration)
-        return; // simple debouncer
-    prevLedChangeMillis = ledChangeMillis;
-    ledChangeMillis = now;
-    ledChanged = true;
-}
-
-int LedObserver::getLastPulseDuration() const
-{
-    return (ledChangeMillis - prevLedChangeMillis);
-}
-
 void LedObserver::updateState()
 {
-    ledStatePrev = ledState;
-    if (ledChanged)
+    unsigned long now = millis();
+    // disable interrupts to avoid race condition as the interrupts could occured while we are executing updateState
+    noInterrupts();
+    unsigned long ledChangeMillis = s_ledChangeMillis;
+    int pulseDuration = s_pulseDuration;    
+    interrupts();
+
+    ledStateEnum ledStatePrev = ledState;
+    // Check if the led change since our last update
+    if (ledChangeMillis >= lastUpdateMillis)
     {
         // When there was an interrupt from the Senseo LED pin
-        int pulseDuration = ledChangeMillis - prevLedChangeMillis;
-        if (true)
+        if (lastPulseDuration != pulseDuration)
             Homie.getLogger() << "LED observer, last pulse duration: " << pulseDuration << endl;
 
         // decide if LED is blinking fast or slow
@@ -80,38 +83,26 @@ void LedObserver::updateState()
             // pulseDuration could be below (user interaction) or above (end of a continuous state) the known times.
             // No actions needed.
         }
-        ledChanged = false;
+        lastPulseDuration = pulseDuration;
     }
     // decide if LED is not blinking but in a continuous state
-    int t = (unsigned long)(millis() - ledChangeMillis);
-    if ((t > pulseContThreshold) && (t < 3 * pulseContThreshold || ledState == LED_unknown))
+    // this should be safe in case of very long frame because ledChangeMillis is updated from the interrupt (which will kick on many time during this long frame)
+    int t = now - ledChangeMillis;
+    if ((t > pulseContThreshold) && (t < 3 * pulseContThreshold || ledState == LED_unknown)) //When the machine start, it could happen that the first "pulse" was longer than pulseContThreshold
     {
         ledState = !digitalRead(ledPin) ? LED_ON : LED_OFF;
     }
 
-    if (hasChanged())
+    if (ledStatePrev != ledState)
     {
         Homie.getLogger() << "LED state machine, new LED state: " << getStateAsString() << endl;
         senseoNode.setProperty("ledState").send(getStateAsString());
     }
-}
 
-bool LedObserver::hasChanged() const
-{
-    // did the LED state change during last updateState() execution?
-    return (ledStatePrev != ledState);
+    lastUpdateMillis = now;    
 }
 
 ledStateEnum LedObserver::getState() const
 {
     return ledState;
-}
-
-const char *LedObserver::getStateAsString() const
-{
-    if (ledState == LED_OFF) return "LED_OFF";
-    else if (ledState == LED_SLOW) return "LED_SLOW";
-    else if (ledState == LED_FAST) return "LED_FAST";
-    else if (ledState == LED_ON) return "LED_ON";
-    else return "LED_unknown";
 }

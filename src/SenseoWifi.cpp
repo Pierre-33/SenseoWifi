@@ -439,8 +439,8 @@ void setup()
      */
     senseoNode.advertise("buzzer").setName("Buzzer").settable(buzzerHandler).setDatatype("enum").setFormat(BuzzerComponent::getValidTunes());
     senseoNode.advertise("debug").setName("Debugging Information").setDatatype("string").setRetained(false);
-    senseoNode.advertise("pendingCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
-    senseoNode.advertise("processedCommands").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
+    senseoNode.advertise("pendingCmds").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
+    senseoNode.advertise("processedCmds").setName("Current Commands (debug)").setDatatype("string").setRetained(false);
     senseoNode.advertise("opState").setName("Operational State").setDatatype("enum").setFormat("SENSEO_unknown,SENSEO_OFF,SENSEO_HEATING,SENSEO_READY,SENSEO_BREWING,SENSEO_NOWATER");
     senseoNode.advertise("ledState").setName("Led State").setDatatype("enum").setFormat("LED_unknown,LED_OFF,LED_SLOW,LED_FAST,LED_ON");
     senseoNode.advertise("power").setName("Power").setDatatype("boolean").settable(powerHandler);
